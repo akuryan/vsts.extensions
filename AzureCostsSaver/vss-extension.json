@@ -1,0 +1,33 @@
+{
+	"manifestVersion": 1,
+	"id": "AzureCostsSaver",
+	"version": "0.0.1",
+	"name": "Azure Costs Saver",
+	"description": "A VSTS Build Task that downscales resources in resource group",
+	"publisher": "anton-kuryan",
+	"targets": [
+		{
+			"id": "Microsoft.VisualStudio.Services"
+			}
+		],
+	"icons": {
+		"default": "icon.png"
+	 },
+	"contributions": [
+		{
+			"id": "AzureCostsSaver",
+			"type": "ms.vss-distributed-task.task",
+			"targets": [
+				"ms.vss-distributed-task.tasks"
+			],
+			"properties": {
+				"name": "buildtask"
+			}
+		}
+	],
+	"files":[
+		{
+			"path": "buildtask"			
+		}
+	]
+}

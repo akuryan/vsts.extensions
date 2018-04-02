@@ -2,7 +2,9 @@
 Param(
     [String] [Parameter(Mandatory = $true)] $ConnectedServiceNameSelector,    
     [String] $ConnectedServiceName,
-    [String] $ConnectedServiceNameARM
+    [String] $ConnectedServiceNameARM,
+	[String] $resourceGroupName,
+	[String] $downscaleSelector
 )
 
 function ProcessWebApps {
@@ -30,8 +32,8 @@ function ProcessWebApps {
             #there is no tags defined
             $tags = @{}
         }
-
-        $cheaperTiers = "Free","Shared"
+		
+        $cheaperTiers = "Free","Shared","Basic"
 
         if ($Downscale) {
             #we need to store current web app sizes in tags
@@ -44,8 +46,9 @@ function ProcessWebApps {
 
             #we shall proceed only if we are in more expensive tiers
             if ($cheaperTiers -notcontains $webFarmResource.Sku.tier) {
-                Write-Host "Downscaling $resourceName to tier: Basic, workerSize: Small"
-                Set-AzureRmAppServicePlan -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
+				#If web app have slots - it could not be downscaled to Basic :(
+                Write-Host "Downscaling $resourceName to tier: Standard, workerSize: Small"
+                Set-AzureRmAppServicePlan -Tier Standard -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
         else {
@@ -106,12 +109,14 @@ function ProcessSqlDatabases {
         $sqlServerResourceId = $sqlServer.ResourceId
         $sqlServerResource = Get-AzureRmResource -ResourceId $sqlServerResourceId -ExpandProperties
 
-        $sqlDatabases = Get-AzureRmSqlDatabase -ResourceGroupName $sqlServerResource.ResourceGroupName -ServerName $sqlServerResource.Name
+		$sqlServerName =  $sqlServerResource.Name
+		
+        $sqlDatabases = Get-AzureRmSqlDatabase -ResourceGroupName $sqlServerResource.ResourceGroupName -ServerName $sqlServerName
 
         foreach ($sqlDb in $sqlDatabases.where( {$_.DatabaseName -ne "master"}))
         {
             $resourceName = $sqlDb.DatabaseName
-            $sqlServerName =  $sqlDb.ServerName
+            
             Write-Host "Performing requested operation on $resourceName"
             $resourceId = $sqlDb.ResourceId
             #get existing tags
@@ -149,14 +154,14 @@ function ProcessSqlDatabases {
     }
 }
 
-
-Trace-VstsEnteringInvocation $MyInvocation
 Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
+Import-Module $PSScriptRoot\ps_modules\VstsTaskSdk
+Trace-VstsEnteringInvocation $MyInvocation
 Initialize-Azure
 
 try {
-	$ResourceGroupName = Get-VstsInput -Name 'resourceGroupName' -Require
-	$Downscale = Get-VstsInput -Name 'downscaleSelector' -Require
+	$ResourceGroupName = $resourceGroupName
+	$Downscale = $downscaleSelector
 	Write-Host "We are going to downscale? $Downscale"
 	Write-Host "Resources will be selected from $ResourceGroupName"
 

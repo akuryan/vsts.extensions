@@ -12,6 +12,8 @@ If Downscale parameter is set to $False - then script will read tags and restore
 
 1. Script will fail if Tags are missing
 
+1. There is no way for web apps to be downscaled to Basic, as at this point of time I could not check, if there is a stagin slot on web app present (Basic does not allow slots at all)
+
 ## Use case
 
 Downscale Azure resources for Testing and Acceptance environments during nights and weekends to save on costs.

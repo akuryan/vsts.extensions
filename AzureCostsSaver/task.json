@@ -16,7 +16,7 @@
   "minimumAgentVersion": "1.95.0",
   "inputs": [
     {
-      "name": "DownscaleSelector",
+      "name": "downscaleSelector",
       "type": "pickList",
       "label": "Downscale resources?",
       "required": true,

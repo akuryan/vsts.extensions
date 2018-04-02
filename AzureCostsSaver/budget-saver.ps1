@@ -1,9 +1,5 @@
-Param(
-    [Parameter(Mandatory=$True)]
-    [string]$ResourceGroupName,
-    [Parameter(Mandatory=$True)]
-    [bool]$Downscale
-)
+[CmdletBinding()]
+Param()
 
 function ProcessWebApps {
     param ($webApps)
@@ -16,7 +12,7 @@ function ProcessWebApps {
         return;
     }
 
-    Write-Verbose "There is $amount $whatsProcessing to be processed."
+    Write-Host "There is $amount $whatsProcessing to be processed."
 
     foreach ($farm in $webApps) {
         $resourceId = $farm.ResourceId
@@ -44,7 +40,7 @@ function ProcessWebApps {
 
             #we shall proceed only if we are in more expensive tiers
             if ($cheaperTiers -notcontains $webFarmResource.Sku.tier) {
-                Write-Verbose "Downscaling $resourceName to tier: Basic, workerSize: Small"
+                Write-Host "Downscaling $resourceName to tier: Basic, workerSize: Small"
                 Set-AzureRmAppServicePlan -Tier Basic -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
@@ -54,7 +50,7 @@ function ProcessWebApps {
                 $targetTier = $tags.costsSaverTier
                 $targetWorkerSize = $tags.costsSaverWorkerSize
                 $targetAmountOfWorkers = $tags.costsSaverNumberofWorkers
-                Write-Verbose "Upscaling $resourceName to tier: $targetTier, workerSize: $targetWorkerSize with $targetAmountOfWorkers workers"
+                Write-Host "Upscaling $resourceName to tier: $targetTier, workerSize: $targetWorkerSize with $targetAmountOfWorkers workers"
                 Set-AzureRmAppServicePlan -Tier $tags.costsSaverTier -NumberofWorkers $tags.costsSaverNumberofWorkers -WorkerSize $tags.costsSaverWorkerSize -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
@@ -72,18 +68,18 @@ function ProcessVirtualMachines {
         return;
     }
 
-    Write-Verbose "There is $amount $whatsProcessing to be processed."
+    Write-Host "There is $amount $whatsProcessing to be processed."
 
     foreach ($vm in $vms) {
         $resourceName = $vm.Name
         if ($Downscale) {
             #Deprovision VMs
-            Write-Verbose "Stopping and deprovisioning $resourceName"
+            Write-Host "Stopping and deprovisioning $resourceName"
             Stop-AzureRmVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Force
         }
         else {
             #Start them up
-            Write-Verbose "Starting $resourceName"
+            Write-Host "Starting $resourceName"
             Start-AzureRmVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name
         }
     }
@@ -100,7 +96,7 @@ function ProcessSqlDatabases {
         return;
     }
 
-    Write-Verbose "There is $amount $whatsProcessing to be processed."
+    Write-Host "There is $amount $whatsProcessing to be processed."
 
     foreach ($sqlServer in $sqlServers) {
         $sqlServerResourceId = $sqlServer.ResourceId
@@ -134,14 +130,14 @@ function ProcessSqlDatabases {
                 #proceed only in case we are not on Basic
                 if ($sqlDb.Edition -ne "Basic")
                 {
-                    Write-Verbose "Downscaling $resourceName at server $sqlServerName to S0 size"
+                    Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
                     Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
                 }
             }
             else {
                 if ($tags.costsSaverEdition -ne "Basic") {
                     $targetSize = $tags.costsSaverSku
-                    Write-Verbose "Upscaling $resourceName at server $sqlServerName to $targetSize size"
+                    Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
                     Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition
                 }
             }
@@ -149,15 +145,29 @@ function ProcessSqlDatabases {
     }
 }
 
-#Get all resources, which are in resource groups, which contains our name
-$resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
 
-if (($resources | Measure-Object).Count -le 0)
-{
-    Write-Host "No resources was retrieved for $ResourceGroupName"
-    Exit $false
+Trace-VstsEnteringInvocation $MyInvocation
+Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
+Initialize-Azure
+
+try {
+	$ResourceGroupName = Get-VstsInput -Name 'resourceGroupName' -Require
+	$Downscale = Get-VstsInput -Name 'downscaleSelector' -Require
+	Write-Host "We are going to downscale? $Downscale"
+	Write-Host "Resources will be selected from $ResourceGroupName"
+
+	#Get all resources, which are in resource groups, which contains our name
+	$resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
+
+	if (($resources | Measure-Object).Count -le 0)
+	{
+		Write-Host "No resources was retrieved for $ResourceGroupName"
+		Exit $false
+	}
+
+	ProcessWebApps -webApps $resources.where( {$_.ResourceType -eq "Microsoft.Web/serverFarms" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+	ProcessSqlDatabases -sqlServers $resources.where( {$_.ResourceType -eq "Microsoft.Sql/servers" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+	ProcessVirtualMachines -vms $resources.where( {$_.ResourceType -eq "Microsoft.Compute/virtualMachines" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+} finally {
+	Trace-VstsLeavingInvocation $MyInvocation
 }
-
-ProcessWebApps -webApps $resources.where( {$_.ResourceType -eq "Microsoft.Web/serverFarms" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-ProcessSqlDatabases -sqlServers $resources.where( {$_.ResourceType -eq "Microsoft.Sql/servers" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-ProcessVirtualMachines -vms $resources.where( {$_.ResourceType -eq "Microsoft.Compute/virtualMachines" -And $_.ResourceGroupName -eq "$ResourceGroupName"})

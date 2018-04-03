@@ -10,7 +10,7 @@
   "version": {
     "Major": 0,
     "Minor": 0,
-    "Patch": 3
+    "Patch": 9
   },
   "demands": [ "azureps" ],
   "minimumAgentVersion": "1.95.0",
@@ -44,7 +44,7 @@
       "required": true,
       "helpMarkDown": "Azure Resource Manager subscription to configure before running PowerShell",
       "visibleRule": "ConnectedServiceNameSelector = ConnectedServiceNameARM"
-    },  
+    },
     {
       "name": "downscaleSelector",
       "type": "pickList",
@@ -68,7 +68,7 @@
   ],
   "instanceNameFormat": "Down/up- scale Azure resources",
   "execution": {
-    "AzurePowerShell": {
+    "PowerShell3": {
       "target": "budget-saver.ps1",
       "argumentFormat": "",
       "workingDirectory": "$(currentDirectory)"

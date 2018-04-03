@@ -48,7 +48,7 @@ function ProcessWebApps {
             if ($cheaperTiers -notcontains $webFarmResource.Sku.tier) {
 				#If web app have slots - it could not be downscaled to Basic :(
                 Write-Host "Downscaling $resourceName to tier: Standard, workerSize: Small"
-                Set-AzureRmAppServicePlan -Tier Standard -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
+                #Set-AzureRmAppServicePlan -Tier Standard -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
         else {
@@ -58,7 +58,7 @@ function ProcessWebApps {
                 $targetWorkerSize = $tags.costsSaverWorkerSize
                 $targetAmountOfWorkers = $tags.costsSaverNumberofWorkers
                 Write-Host "Upscaling $resourceName to tier: $targetTier, workerSize: $targetWorkerSize with $targetAmountOfWorkers workers"
-                Set-AzureRmAppServicePlan -Tier $tags.costsSaverTier -NumberofWorkers $tags.costsSaverNumberofWorkers -WorkerSize $tags.costsSaverWorkerSize -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
+                #Set-AzureRmAppServicePlan -Tier $tags.costsSaverTier -NumberofWorkers $tags.costsSaverNumberofWorkers -WorkerSize $tags.costsSaverWorkerSize -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
     }
@@ -140,43 +140,38 @@ function ProcessSqlDatabases {
                 if ($sqlDb.Edition -ne "Basic")
                 {
                     Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
+                    #Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
                 }
             }
             else {
                 if ($tags.costsSaverEdition -ne "Basic") {
                     $targetSize = $tags.costsSaverSku
                     Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition
+                    #Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition
                 }
             }
         }
     }
 }
 
+
+$ResourceGroupName = Get-VstsInput -Name resourceGroupName -Require
+$Downscale = Get-VstsInput -Name downscaleSelector -Require
+Write-Host "We are going to downscale? $Downscale"
+Write-Host "Resources will be selected from $ResourceGroupName"
+
 Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
-Import-Module $PSScriptRoot\ps_modules\VstsTaskSdk
-Trace-VstsEnteringInvocation $MyInvocation
 Initialize-Azure
 
-try {
-	$ResourceGroupName = $resourceGroupName
-	$Downscale = $downscaleSelector
-	Write-Host "We are going to downscale? $Downscale"
-	Write-Host "Resources will be selected from $ResourceGroupName"
+#Get all resources, which are in resource groups, which contains our name
+$resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
 
-	#Get all resources, which are in resource groups, which contains our name
-	$resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
-
-	if (($resources | Measure-Object).Count -le 0)
-	{
-		Write-Host "No resources was retrieved for $ResourceGroupName"
-		Exit $false
-	}
-
-	ProcessWebApps -webApps $resources.where( {$_.ResourceType -eq "Microsoft.Web/serverFarms" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-	ProcessSqlDatabases -sqlServers $resources.where( {$_.ResourceType -eq "Microsoft.Sql/servers" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-    ProcessVirtualMachines -vms $resources.where( {$_.ResourceType -eq "Microsoft.Compute/virtualMachines" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-} finally {
-	Trace-VstsLeavingInvocation $MyInvocation
+if (($resources | Measure-Object).Count -le 0)
+{
+    Write-Host "No resources was retrieved for $ResourceGroupName"
+    Exit $false
 }
+
+ProcessWebApps -webApps $resources.where( {$_.ResourceType -eq "Microsoft.Web/serverFarms" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+ProcessSqlDatabases -sqlServers $resources.where( {$_.ResourceType -eq "Microsoft.Sql/servers" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+ProcessVirtualMachines -vms $resources.where( {$_.ResourceType -eq "Microsoft.Compute/virtualMachines" -And $_.ResourceGroupName -eq "$ResourceGroupName"})

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 Param(
-    [String] [Parameter(Mandatory = $true)] $ConnectedServiceNameSelector,    
+    [String] [Parameter(Mandatory = $true)] $ConnectedServiceNameSelector,
     [String] $ConnectedServiceName,
     [String] $ConnectedServiceNameARM,
 	[String] $resourceGroupName,
@@ -32,7 +32,7 @@ function ProcessWebApps {
             #there is no tags defined
             $tags = @{}
         }
-		
+
         $cheaperTiers = "Free","Shared","Basic"
 
         if ($Downscale) {
@@ -67,7 +67,7 @@ function ProcessWebApps {
 function ProcessVirtualMachines {
     param ($vms)
 
-    $whatsProcessing = "Virual machines"
+    $whatsProcessing = "Virtual machines"
     Write-Host "Processing $whatsProcessing"
     $amount = ($vms | Measure-Object).Count
     if ($amount -le 0) {
@@ -110,13 +110,13 @@ function ProcessSqlDatabases {
         $sqlServerResource = Get-AzureRmResource -ResourceId $sqlServerResourceId -ExpandProperties
 
 		$sqlServerName =  $sqlServerResource.Name
-		
+
         $sqlDatabases = Get-AzureRmSqlDatabase -ResourceGroupName $sqlServerResource.ResourceGroupName -ServerName $sqlServerName
 
         foreach ($sqlDb in $sqlDatabases.where( {$_.DatabaseName -ne "master"}))
         {
             $resourceName = $sqlDb.DatabaseName
-            
+
             Write-Host "Performing requested operation on $resourceName"
             $resourceId = $sqlDb.ResourceId
             #get existing tags
@@ -176,7 +176,7 @@ try {
 
 	ProcessWebApps -webApps $resources.where( {$_.ResourceType -eq "Microsoft.Web/serverFarms" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
 	ProcessSqlDatabases -sqlServers $resources.where( {$_.ResourceType -eq "Microsoft.Sql/servers" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-	ProcessVirtualMachines -vms $resources.where( {$_.ResourceType -eq "Microsoft.Compute/virtualMachines" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+    ProcessVirtualMachines -vms $resources.where( {$_.ResourceType -eq "Microsoft.Compute/virtualMachines" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
 } finally {
 	Trace-VstsLeavingInvocation $MyInvocation
 }

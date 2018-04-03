@@ -1,5 +1,7 @@
 $ResourceGroupName = Get-VstsInput -Name resourceGroupName -Require
-$Downscale = Get-VstsInput -Name downscaleSelector -Require
+$downScaleInput = Get-VstsInput -Name downscaleSelector -Require
+Write-Host "In input downscaleInput we have $downScaleInput"
+$Downscale = [System.Convert]::ToBoolean($downScaleInput);
 Write-Host "We are going to downscale? $Downscale"
 Write-Host "Resources will be selected from $ResourceGroupName resource group"
 
@@ -55,8 +57,8 @@ function ProcessWebApps {
             #we shall proceed only if we are in more expensive tiers
             if ($cheaperTiers -notcontains $webFarmResource.Sku.tier) {
 				#If web app have slots - it could not be downscaled to Basic :(
-                Write-Host "Downscaling $resourceName to tier: Standard, workerSize: Small"
-                #Set-AzureRmAppServicePlan -Tier Standard -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
+                Write-Host "Downscaling $resourceName to tier: Standard, workerSize: Small and 1 worker"
+                Set-AzureRmAppServicePlan -Tier Standard -NumberofWorkers 1 -WorkerSize Small -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
         else {
@@ -66,7 +68,7 @@ function ProcessWebApps {
                 $targetWorkerSize = $tags.costsSaverWorkerSize
                 $targetAmountOfWorkers = $tags.costsSaverNumberofWorkers
                 Write-Host "Upscaling $resourceName to tier: $targetTier, workerSize: $targetWorkerSize with $targetAmountOfWorkers workers"
-                #Set-AzureRmAppServicePlan -Tier $tags.costsSaverTier -NumberofWorkers $tags.costsSaverNumberofWorkers -WorkerSize $tags.costsSaverWorkerSize -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
+                Set-AzureRmAppServicePlan -Tier $tags.costsSaverTier -NumberofWorkers $tags.costsSaverNumberofWorkers -WorkerSize $tags.costsSaverWorkerSize -ResourceGroupName $webFarmResource.ResourceGroupName -Name $webFarmResource.Name
             }
         }
     }
@@ -148,14 +150,14 @@ function ProcessSqlDatabases {
                 if ($sqlDb.Edition -ne "Basic")
                 {
                     Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
-                    #Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
+                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
                 }
             }
             else {
                 if ($tags.costsSaverEdition -ne "Basic") {
                     $targetSize = $tags.costsSaverSku
                     Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
-                    #Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition
+                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition
                 }
             }
         }

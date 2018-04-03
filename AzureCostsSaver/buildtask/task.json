@@ -9,8 +9,8 @@
   "author": "Anton Kuryan",
   "version": {
     "Major": 0,
-    "Minor": 0,
-    "Patch": 10
+    "Minor": 1,
+    "Patch": 0
   },
   "demands": [ "azureps" ],
   "minimumAgentVersion": "1.95.0",
@@ -51,10 +51,10 @@
       "label": "Downscale resources?",
       "required": true,
       "helpMarkDown": "",
-      "defaultValue": "$True",
+      "defaultValue": "Yes",
       "options": {
-        "$True": "$True",
-        "$False": "$False"
+        "True": "Yes",
+        "False": "No"
       }
     },
 	{

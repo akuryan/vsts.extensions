@@ -2,9 +2,9 @@
 
 This task will take Azure Resource group name as an input and use Azure Powershell runner in VSTS to get all Azure web apps, SQL databases and Virtual machines in this resource group.
 
-If user selects to Downscale costs - web apps are scaled to B1 size, SQL databases to S0, VMs - deprovisioned. Web app and SQL database sizes are saved in 
+If user selects to Downscale costs - web apps are scaled to S1 size, SQL databases to S0, VMs - deprovisioned. Web app and SQL database sizes are saved in tags on resource.
 
-If Downscale parameter is set to $False - then script will read tags and restore
+If Downscale parameter is set to No - then script will read tags and restore resource sizes for SQL databases and will start deprovisioned VMs.
 
 ## Issues
 

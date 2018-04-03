@@ -1,11 +1,19 @@
-[CmdletBinding()]
-Param(
-    [String] [Parameter(Mandatory = $true)] $ConnectedServiceNameSelector,
-    [String] $ConnectedServiceName,
-    [String] $ConnectedServiceNameARM,
-	[String] $resourceGroupName,
-	[String] $downscaleSelector
-)
+$ResourceGroupName = Get-VstsInput -Name resourceGroupName -Require
+$Downscale = Get-VstsInput -Name downscaleSelector -Require
+Write-Host "We are going to downscale? $Downscale"
+Write-Host "Resources will be selected from $ResourceGroupName resource group"
+
+Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
+Initialize-Azure
+
+#Get all resources, which are in resource groups, which contains our name
+$resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
+
+if (($resources | Measure-Object).Count -le 0)
+{
+    Write-Host "No resources was retrieved for $ResourceGroupName"
+    Exit $false
+}
 
 function ProcessWebApps {
     param ($webApps)
@@ -152,24 +160,6 @@ function ProcessSqlDatabases {
             }
         }
     }
-}
-
-
-$ResourceGroupName = Get-VstsInput -Name resourceGroupName -Require
-$Downscale = Get-VstsInput -Name downscaleSelector -Require
-Write-Host "We are going to downscale? $Downscale"
-Write-Host "Resources will be selected from $ResourceGroupName"
-
-Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
-Initialize-Azure
-
-#Get all resources, which are in resource groups, which contains our name
-$resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
-
-if (($resources | Measure-Object).Count -le 0)
-{
-    Write-Host "No resources was retrieved for $ResourceGroupName"
-    Exit $false
 }
 
 ProcessWebApps -webApps $resources.where( {$_.ResourceType -eq "Microsoft.Web/serverFarms" -And $_.ResourceGroupName -eq "$ResourceGroupName"})

@@ -1,7 +1,7 @@
 {
 	"manifestVersion": 1,
 	"id": "AzureCostsSaver",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"name": "Azure Costs Saver",
 	"description": "A VSTS Build Task that downscales resources in resource group",
 	"publisher": "anton-kuryan",

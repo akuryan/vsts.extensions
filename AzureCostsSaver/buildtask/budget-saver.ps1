@@ -150,14 +150,14 @@ function ProcessSqlDatabases {
                 if ($sqlDb.Edition -ne "Basic")
                 {
                     Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
+                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard -Tags $tags
                 }
             }
             else {
                 if ($tags.costsSaverEdition -ne "Basic") {
                     $targetSize = $tags.costsSaverSku
                     Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition
+                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition -Tags $tags
                 }
             }
         }

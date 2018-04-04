@@ -142,7 +142,7 @@ function ProcessSqlDatabases {
                 $tags.costsSaverSku = $sqlDb.CurrentServiceObjectiveName
                 $tags.costsSaverEdition = $sqlDb.Edition
 
-                #write tags to web app
+                #write tags to sql database
                 Set-AzureRmResource -ResourceId $resourceId -Tag $tags -Force
                 (Get-AzureRmResource -ResourceId $resourceId).Tags
 
@@ -160,6 +160,9 @@ function ProcessSqlDatabases {
                     Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition -Tags $tags
                 }
             }
+            #Do not know why - but SQL server database resource tend to loose on resizing
+            Set-AzureRmResource -ResourceId $resourceId -Tag $tags -Force
+            (Get-AzureRmResource -ResourceId $resourceId).Tags
         }
     }
 }

@@ -122,6 +122,13 @@ function ProcessSqlDatabases {
 		$sqlServerName =  $sqlServerResource.Name
 
         $sqlDatabases = Get-AzureRmSqlDatabase -ResourceGroupName $sqlServerResource.ResourceGroupName -ServerName $sqlServerName
+        #Get existing tags for SQL server
+        $sqlServerTags = $sqlServerResource.Tags
+        if ($sqlServerTags.Count -eq 0)
+        {
+            #there is no tags defined
+            $sqlServerTags = @{}
+        }
 
         foreach ($sqlDb in $sqlDatabases.where( {$_.DatabaseName -ne "master"}))
         {
@@ -129,41 +136,35 @@ function ProcessSqlDatabases {
 
             Write-Host "Performing requested operation on $resourceName"
             $resourceId = $sqlDb.ResourceId
-            #get existing tags
-            $tags = (Get-AzureRmResource -ResourceId $resourceId).Tags
-            if ($tags.Count -eq 0)
-            {
-                #there is no tags defined
-                $tags = @{}
-            }
-            if ($Downscale) {
-                #we need to store current sql server sizes in tags
-                $tags.costsSaverId = $sqlDb.CurrentServiceObjectiveId.Guid
-                $tags.costsSaverSku = $sqlDb.CurrentServiceObjectiveName
-                $tags.costsSaverEdition = $sqlDb.Edition
 
-                #write tags to sql database
-                Set-AzureRmResource -ResourceId $resourceId -Tag $tags -Force
-                (Get-AzureRmResource -ResourceId $resourceId).Tags
+            $keySku = ("{0}-{1}" -f $resourceName, "sku")
+            $keyEdition = ("{0}-{1}" -f $resourceName, "edition")
+
+            if ($Downscale) {
+
+                $sqlServerTags[$keySku] = $sqlDb.CurrentServiceObjectiveName
+                $sqlServerTags[$keyEdition] = $sqlDb.Edition
 
                 #proceed only in case we are not on Basic
                 if ($sqlDb.Edition -ne "Basic")
                 {
                     Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard -Tags $tags
+                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
                 }
             }
             else {
-                if ($tags.costsSaverEdition -ne "Basic") {
-                    $targetSize = $tags.costsSaverSku
+                $edition = $sqlServerTags[$keyEdition]
+                $targetSize = $sqlServerTags[$keySku]
+                if ($edition -ne "Basic") {
+
                     Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $tags.costsSaverEdition -Tags $tags
+                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $edition
                 }
             }
-            #Do not know why - but SQL server database resource tend to loose on resizing
-            Set-AzureRmResource -ResourceId $resourceId -Tag $tags -Force
-            (Get-AzureRmResource -ResourceId $resourceId).Tags
         }
+        #Store tags on SQL server
+        Set-AzureRmResource -ResourceId $sqlServerResourceId -Tag $sqlServerTags -Force
+        (Get-AzureRmResource -ResourceId $sqlServerResourceId).Tags
     }
 }
 

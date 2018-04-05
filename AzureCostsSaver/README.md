@@ -6,6 +6,8 @@ If user selects to Downscale costs - web apps are scaled to S1 size, SQL databas
 
 If Downscale parameter is set to No - then script will read tags and restore resource sizes for SQL databases and will start deprovisioned VMs.
 
+SQL databases sizes tags are stored on SQL server resource, as they tend to dissappear on SQL database resource.
+
 ## Issues
 
 1. Script will silently fail if you try to run upscaling before downscaling

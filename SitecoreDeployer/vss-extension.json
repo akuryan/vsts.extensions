@@ -1,0 +1,43 @@
+{
+	"manifestVersion": 1,
+	"id": "SitecoreAzureVstsDeployer",
+	"version": "0.0.1",
+	"name": "Sitecore to Azure Deployer",
+	"description": "A VSTS Release Task to deploy Sitecore in Azure",
+	"publisher": "anton-kuryan",
+	"public": false,
+    "content": {
+        "details": {
+            "path": "README.md"
+        }
+	},
+    "repository": {
+        "type": "git",
+        "uri": "https://github.com/akuryan/vsts.extensions/tree/master/SitecoreDeployer"
+    },
+	"targets": [
+		{
+			"id": "Microsoft.VisualStudio.Services"
+			}
+		],
+	"icons": {
+		"default": "icon.png"
+	 },
+	"contributions": [
+		{
+			"id": "SitecoreAzureVstsDeployer",
+			"type": "ms.vss-distributed-task.task",
+			"targets": [
+				"ms.vss-distributed-task.tasks"
+			],
+			"properties": {
+				"name": "buildtask"
+			}
+		}
+	],
+	"files":[
+		{
+			"path": "buildtask"
+		}
+	]
+}

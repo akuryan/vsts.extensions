@@ -57,14 +57,14 @@
         "False": "No"
       }
     },
-	{
-		"name": "resourceGroupName",
-		"type": "string",
-		"label": "Resource group name",
-		"defaultValue": "",
-		"required": true,
-		"helpMarkDown": "Enter resource group name"
-	}
+    {
+      "name": "resourceGroupName",
+      "type": "string",
+      "label": "Resource group name",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Enter resource group name"
+    }
   ],
   "instanceNameFormat": "Down/up- scale Azure resources",
   "execution": {

@@ -151,7 +151,7 @@
       "type": "multiLine",
       "label": "Inline license.xml",
       "required": false,
-      "defaultValue": "# You can put your license.xml content here \n# You can pass it via variable as well",
+      "defaultValue": "# You can put your license.xml content here",
       "helpMarkDown": "Enter license.xml content here.",
       "visibleRule": "licenseLocation = inline",
       "properties": {

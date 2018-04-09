@@ -1,25 +1,25 @@
 [CmdletBinding()]
 Param(
-    #template path - can be "$($PSScriptRoot)\..\IntegrationTest (XP0)\xp0s-azuredeploy-msdeploy.json" for example
-    [Parameter(Mandatory=$True)]
-    [string]$ArmTemplatePath,
-    #template path - can be "$($PSScriptRoot)\..\IntegrationTest (XP0)\xp0s-azuredeploy-msdeploy.parameters.json" for example
-    [Parameter(Mandatory=$True)]
-    [string]$ArmParametersPath,
-    #resource group name
-    [Parameter(Mandatory=$True)]
-    [string]$RgName,
-    #resource group name
-    [string]$location = "West Europe",
-    #select deployment type - can be 1 of 3: infra, msdeploy, redeploy
-    [Parameter(Mandatory=$True)]
-    [ValidateSet("infra", "msdeploy", "redeploy")]
-    [string]$DeploymentType,
     #Allows override to not regenerate SAS tokens, even if they are present
     [bool]$GenerateSas = $True
 )
+#getting data from task
+$ArmTemplatePath = Get-VstsInput -Name armTemplatePath -Require
+$ArmParametersPath = Get-VstsInput -Name armParametersPath -Require
+$RgName = Get-VstsInput -Name resourceGroupName -Require
+$location = Get-VstsInput -Name location -Require
+$DeploymentType = Get-VstsInput -Name deploymentType -Require
+#get input for generate SAS
+$generateSasInput = Get-VstsInput -Name generateSas -Require
+#convert it to Boolean
+$GenerateSas = [System.Convert]::ToBoolean($generateSasInput);
+#get license location
+$licenseLocation = Get-VstsInput -Name licenseLocation -Require
 
-Import-Module "$($PSScriptRoot)\functions-module.psm1"
+Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
+Initialize-Azure
+
+Import-Module $PSScriptRoot\functions-module.psm1
 #region Create Params Object
 # license file needs to be secure string and adding the params as a hashtable is the only way to do it
 $additionalParams = New-Object -TypeName Hashtable;
@@ -68,9 +68,34 @@ if ($DeploymentType -eq "infra")
     $additionalParams.Set_Item('deploymentId', $RgName);
 }
 else {
-    # read the contents of your Sitecore license file
-	$licenseFileContent = Get-Content -Raw -Encoding UTF8 -Path "$($PSScriptRoot)\..\data\license.xml" | Out-String;
-    $additionalParams.Set_Item('licenseXml', $licenseFileContent);
+    #now, tricky part = get license.xml content
+    if ($licenseLocation -ne "none") {
+        #license file is not defined in template
+        if ($licenseLocation -eq "inline") {
+            #license is added to VSTS release settings
+            $licenseFileContent = Get-VstsInput -Name inlineLicense -Require
+        }
+        if ($licenseLocation -eq "filesystem") {
+                # read the contents of your Sitecore license file
+                $licenseFsPath = Get-VstsInput -Name pathToLicense -Require
+                $licenseFileContent = Get-Content -Raw -Encoding UTF8 -Path $licenseFsPath | Out-String;
+        }
+        if ($licenseLocation -eq "url") {
+            #read license from URL
+            $licenseUriInput = Get-VstsInput -Name urlToLicense -Require
+            if ($GenerateSas) {
+                #trying to generate SAS
+                $licenseUri = TryGenerateSas -maybeStorageUri $licenseUriInput
+            } else {
+                $licenseUri = $licenseUriInput
+            }
+            $wc = New-Object System.Net.WebClient
+            $wc.Encoding = [System.Text.Encoding]::UTF8
+            $licenseFileContent =  $wc.DownloadString($licenseUri)
+        }
+        #we shall update ARM template parameters only in case it is defined on VSTS level
+        $additionalParams.Set_Item('licenseXml', $licenseFileContent);
+    }
 }
 
 #endregion

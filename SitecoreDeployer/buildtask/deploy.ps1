@@ -1,8 +1,3 @@
-[CmdletBinding()]
-Param(
-    #Allows override to not regenerate SAS tokens, even if they are present
-    [bool]$GenerateSas = $True
-)
 #getting data from task
 $ArmTemplatePath = Get-VstsInput -Name armTemplatePath -Require
 $ArmParametersPath = Get-VstsInput -Name armParametersPath -Require
@@ -26,48 +21,39 @@ $additionalParams = New-Object -TypeName Hashtable;
 
 $params = Get-Content $ArmParametersPath -Raw | ConvertFrom-Json;
 
-foreach($p in $params | Get-Member -MemberType *Property)
-{
+foreach($p in $params | Get-Member -MemberType *Property) {
 	# Check if the parameter is a reference to a Key Vault secret
 	if (($params.$($p.Name).reference) -and
 		($params.$($p.Name).reference.keyVault) -and
 		($params.$($p.Name).reference.keyVault.id) -and
-		($params.$($p.Name).reference.secretName))
-	{
+		($params.$($p.Name).reference.secretName)){
 		$vaultName = Split-Path $params.$($p.Name).reference.keyVault.id -Leaf
         $secretName = $params.$($p.Name).reference.secretName
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
             #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
             $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText
             Write-Debug "SecretValueText is $secret"
-        }
-        else {
+        } else {
             $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue
         }
 
 		$additionalParams.Add($p.Name, $secret);
-	}
-
-	# or a normal plain text parameter
-	else
-	{
+	} else {
+        # or a normal plain text parameter
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
             #process replacement here
             $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value
             $additionalParams.Add($p.Name, $valueToAdd);
             Write-Debug "SecretValueText is $valueToAdd"
-        }
-        else {
+        } else {
             $additionalParams.Add($p.Name, $params.$($p.Name).value);
         }
 	}
 }
 
-if ($DeploymentType -eq "infra")
-{
+if ($DeploymentType -eq "infra") {
     $additionalParams.Set_Item('deploymentId', $RgName);
-}
-else {
+} else {
     #now, tricky part = get license.xml content
     if ($licenseLocation -ne "none") {
         #license file is not defined in template
@@ -115,15 +101,12 @@ try {
         New-AzureRmResourceGroup -Name $RgName -Location $location;
     }
 
-        Write-Verbose "Starting ARM deployment...";
+    Write-Verbose "Starting ARM deployment...";
+    $deploymentName = "sitecore-$DeploymentType"
 
-    if ($DeploymentType -eq "infra")
-    {
-        $deploymentName = "sitecore-$DeploymentType"
+    if ($DeploymentType -eq "infra") {
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
-    }
-    else {
-        $deploymentName = "sitecore-msdeploy"
+    } else {
         # Fetch output parameters from Sitecore ARM deployment as authoritative source for the rest of web deploy params
         $sitecoreDeployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name "sitecore-infra"
         $sitecoreDeploymentOutput = $sitecoreDeployment.Outputs
@@ -135,8 +118,7 @@ try {
 
     Write-Host "Deployment Complete.";
 }
-catch
-{
+catch {
     Write-Error $_.Exception.Message
     Break
 }

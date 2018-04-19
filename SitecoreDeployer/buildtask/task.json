@@ -1,5 +1,5 @@
 {
-  "id": "{EA5933F2-8F3E-4A2D-92D8-10E55ED1EA82}",
+  "id": "{38AD8E23-476F-4649-A5D1-D796EC9A626F}",
   "name": "SitecoreAzureVstsDeployer",
   "friendlyName": "Azure Costs Saver",
   "description": "Release task for deploying Sitecore to Azure",

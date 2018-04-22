@@ -1,7 +1,7 @@
 {
   "id": "{38AD8E23-476F-4649-A5D1-D796EC9A626F}",
   "name": "SitecoreAzureVstsDeployer",
-  "friendlyName": "Azure Costs Saver",
+  "friendlyName": "Sitecore Azure Deployer",
   "description": "Release task for deploying Sitecore to Azure",
   "helpMarkDown": "Information on how to use the task: [See repository](https://github.com/akuryan/vsts.extensions/tree/master/SitecoreDeployer)  \n",
   "category": "Utility",

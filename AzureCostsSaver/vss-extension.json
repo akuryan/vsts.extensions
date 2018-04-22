@@ -21,7 +21,8 @@
 			}
 		],
 	"icons": {
-		"default": "icon.png"
+		"default": "images/icons/icon-small.png",
+		"large": "images/icons/icon.png"
 	 },
 	"contributions": [
 		{

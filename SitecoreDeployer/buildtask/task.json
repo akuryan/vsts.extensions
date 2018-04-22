@@ -138,7 +138,7 @@
       "label": "License location",
       "required": true,
       "helpMarkDown": "Please, select where license is located: Inline - paste license.xml content to multiline field; URL - enter URL, where valid license.xml could be downloaded; Filesystem - enter path, where license.xml is located on agent FS; none - license.xml content is added to ARM template already",
-      "defaultValue": "filesystem",
+      "defaultValue": "none",
       "options": {
         "inline": "Inline",
         "url": "URL",

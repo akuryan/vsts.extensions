@@ -24,6 +24,11 @@
 		"default": "images/icons/icon-small.png",
 		"large": "images/icons/icon.png"
 	 },
+	 "screenshots": [
+		 {
+			 "path": "images/screenshots/add-task.png"
+		 }
+	 ],
 	"contributions": [
 		{
 			"id": "SitecoreAzureVstsDeployer",

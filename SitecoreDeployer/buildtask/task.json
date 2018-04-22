@@ -47,7 +47,7 @@
     },
     {
       "name": "armTemplatePath",
-      "type": "string",
+      "type": "filePath",
       "label": "ARM template path",
       "defaultValue": "",
       "required": true,
@@ -55,7 +55,7 @@
     },
     {
       "name": "armParametersPath",
-      "type": "string",
+      "type": "filePath",
       "label": "ARM parameters path",
       "defaultValue": "",
       "required": true,
@@ -151,7 +151,7 @@
       "type": "multiLine",
       "label": "Inline license.xml",
       "required": false,
-      "defaultValue": "# You can put your license.xml content here",
+      "defaultValue": "# You shall put your license.xml content here",
       "helpMarkDown": "Enter license.xml content here.",
       "visibleRule": "licenseLocation = inline",
       "properties": {
@@ -170,7 +170,7 @@
     },
     {
       "name": "pathToLicense",
-      "type": "string",
+      "type": "filePath",
       "label": "License.xml path on FileSystem",
       "defaultValue": "",
       "required": false,

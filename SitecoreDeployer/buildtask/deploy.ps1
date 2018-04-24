@@ -51,6 +51,12 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 	}
 }
 
+foreach($key in $additionalParams.keys)
+{
+    $message = '{0} is {1} years old' -f $key, $additionalParams[$key]
+    Write-Output $message
+}
+
 if ($DeploymentType -eq "infra") {
     $additionalParams.Set_Item('deploymentId', $RgName);
 } else {

@@ -6,3 +6,7 @@ This repository will contain set of VSTS build tasks which I am using in day-to-
 
 I used this guide http://www.andrewhoefling.com/devops/2017/10/02/Dev-Ops-VSTS-Custom-Build-Task-Extension.html to create an extension.
 In the end, it is just execution of command ```tfx extension create --manifest-globs vss-extension.json```
+
+## Debug extension at VSTS level
+
+To debug extension at VSTS - put variable "system.debug" equal to "True" at variables of Build or Release

@@ -46,18 +46,18 @@ foreach($p in $params | Get-Member -MemberType *Property) {
             #process replacement here
             $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value
             $additionalParams.Add($p.Name, $valueToAdd);
-            Write-Output "URI text is $valueToAdd"
+            Write-Verbose "URI text is $valueToAdd"
         } else {
             $additionalParams.Add($p.Name, $params.$($p.Name).value);
         }
 	}
 }
 
-Write-Output "Do we need to generate SAS? $GenerateSas"
+Write-Verbose "Do we need to generate SAS? $GenerateSas"
 foreach($key in $additionalParams.keys)
 {
     $message = '{0} is {1}' -f $key, $additionalParams[$key]
-    Write-Output $message
+    Write-Verbose $message
 }
 
 if ($DeploymentType -eq "infra") {

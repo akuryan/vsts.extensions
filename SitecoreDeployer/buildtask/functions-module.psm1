@@ -44,34 +44,34 @@ function TryGenerateSas {
 
     process {
         if ([string]::IsNullOrEmpty($maybeStorageUri)) {
-            Write-Output "TryGenerateSas: URL is empty"
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL is empty"
             return $maybeStorageUri
         }
         if (-Not [system.uri]::IsWellFormedUriString($maybeStorageUri,[System.UriKind]::Absolute)) {
             #check, if it actually absolute URI
-            Write-Output "TryGenerateSas: URL $maybeStorageUri is not absolute"
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $maybeStorageUri is not absolute"
             return $maybeStorageUri
         }
         if ($maybeStorageUri -inotmatch "$blobBaseDomain") {
-            Write-Output "TryGenerateSas: URL $maybeStorageUri does not contain $blobBaseDomain"
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $maybeStorageUri does not contain $blobBaseDomain"
             #InputUri does not contains blob.core.windows.net
             return $maybeStorageUri
         }
         $parsedUri = [Uri]$maybeStorageUri
         $storageAccountName = $parsedUri.DnsSafeHost -replace "$blobBaseDomain", ""
         if ([string]::IsNullOrEmpty($storageAccountName)) {
-            Write-Output "TryGenerateSas: Could not retrieve storage account from $maybeStorageUri"
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Could not retrieve storage account from $maybeStorageUri"
             return $maybeStorageUri
         }
 
         $containerName = $parsedUri.Segments[1]
         if ([string]::IsNullOrEmpty($containerName)) {
-            Write-Output "TryGenerateSas: Could not retrieve container name from $maybeStorageUri"
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Could not retrieve container name from $maybeStorageUri"
             return $maybeStorageUri
         }
         $containerName = $containerName -replace '/',""
         if ([string]::IsNullOrEmpty($containerName)) {
-            Write-Output "TryGenerateSas: Container name from $maybeStorageUri is empty"
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Container name from $maybeStorageUri is empty"
             return $maybeStorageUri
         }
 

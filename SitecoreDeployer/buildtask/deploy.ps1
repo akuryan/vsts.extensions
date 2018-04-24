@@ -7,7 +7,7 @@ $DeploymentType = Get-VstsInput -Name deploymentType -Require
 #get input for generate SAS
 $generateSasInput = Get-VstsInput -Name generateSas -Require
 #convert it to Boolean
-$GenerateSas = [System.Convert]::ToBoolean($generateSasInput);
+$GenerateSas = [System.Convert]::ToBoolean($generateSasInput)
 #get license location
 $licenseLocation = Get-VstsInput -Name licenseLocation -Require
 
@@ -41,6 +41,8 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 	} else {
         # or a normal plain text parameter
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
+            $tempUrlForMessage = $params.$($p.Name).value
+            Write-Output "We are going to generate SAS for $tempUrlForMessage"
             #process replacement here
             $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value
             $additionalParams.Add($p.Name, $valueToAdd);
@@ -51,9 +53,10 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 	}
 }
 
+Write-Output "Do we need to generate SAS? $GenerateSas"
 foreach($key in $additionalParams.keys)
 {
-    $message = '{0} is {1} years old' -f $key, $additionalParams[$key]
+    $message = '{0} is {1}' -f $key, $additionalParams[$key]
     Write-Output $message
 }
 

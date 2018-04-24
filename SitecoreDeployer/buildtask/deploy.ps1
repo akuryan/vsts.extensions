@@ -14,7 +14,7 @@ $licenseLocation = Get-VstsInput -Name licenseLocation -Require
 Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
 Initialize-Azure
 
-Import-Module $PSScriptRoot\functions-module.psm1
+Import-Module $PSScriptRoot\functions-module-v1.psm1
 #region Create Params Object
 # license file needs to be secure string and adding the params as a hashtable is the only way to do it
 $additionalParams = New-Object -TypeName Hashtable;

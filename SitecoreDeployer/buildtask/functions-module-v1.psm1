@@ -43,6 +43,7 @@ function TryGenerateSas {
     )
 
     process {
+        Write-Verbose "Starting TryGenerateSas"
         $escapedUri = [uri]::EscapeUriString($maybeStorageUri)
 
         if ([string]::IsNullOrEmpty($escapedUri)) {
@@ -95,6 +96,7 @@ function TryGenerateSas {
                 $packageUri = $parsedUri.Scheme + "://" + $parsedUri.DnsSafeHost + $parsedUri.LocalPath + $sasValue
             }
         }
+        Write-Verbose "Ended TryGenerateSas"
         return  $packageUri
     }
 }
@@ -106,10 +108,12 @@ function GenerateSasForStorageURI {
     )
 
     process {
+        Write-Verbose "Starting GenerateSasForStorageURI"
         #Processes input string and, if it storage URI - tries to generate a short living (10 hours) SAS for it
 
         $storageAccount = Get-AzureRmStorageAccount | Where-Object {$_.StorageAccountName -eq $storageAccountName}
         if ($null -eq $storageAccount) {
+            Write-Host "##vso[task.logissue type=warning;] GenerateSasForStorageURI: Could not get storage $storageAccountName"
             #could not get storage account :(
             return ""
         }
@@ -117,6 +121,7 @@ function GenerateSasForStorageURI {
         $now = [System.DateTime]::Now
         #construct SAS token for a container
         $SAStokenQuery = New-AzureStorageContainerSASToken -Name $containerName -Context $storageAccount.Context -Permission r -StartTime $now.AddHours(-1) -ExpiryTime $now.AddHours(10)
+        Write-Verbose "Ended GenerateSasForStorageURI"
         return $SAStokenQuery
     }
 }

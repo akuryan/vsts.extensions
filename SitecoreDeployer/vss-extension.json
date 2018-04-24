@@ -11,6 +11,9 @@
             "path": "README.md"
         }
 	},
+	"categories": [
+		"Build and release"
+	],
     "repository": {
         "type": "git",
         "uri": "https://github.com/akuryan/vsts.extensions/tree/master/SitecoreDeployer"

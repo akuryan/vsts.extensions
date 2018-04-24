@@ -42,11 +42,11 @@ foreach($p in $params | Get-Member -MemberType *Property) {
         # or a normal plain text parameter
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
             $tempUrlForMessage = $params.$($p.Name).value
-            Write-Output "We are going to generate SAS for $tempUrlForMessage"
+            Write-Verbose "We are going to generate SAS for $tempUrlForMessage"
             #process replacement here
             $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value
             $additionalParams.Add($p.Name, $valueToAdd);
-            Write-Debug "URI text is $valueToAdd"
+            Write-Output "URI text is $valueToAdd"
         } else {
             $additionalParams.Add($p.Name, $params.$($p.Name).value);
         }
@@ -84,6 +84,7 @@ if ($DeploymentType -eq "infra") {
             } else {
                 $licenseUri = $licenseUriInput
             }
+            Write-Verbose "We are going to download license from $licenseUri"
             $wc = New-Object System.Net.WebClient
             $wc.Encoding = [System.Text.Encoding]::UTF8
             $licenseFileContent =  $wc.DownloadString($licenseUri)

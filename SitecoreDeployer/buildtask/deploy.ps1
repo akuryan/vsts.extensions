@@ -32,7 +32,7 @@ foreach($p in $params | Get-Member -MemberType *Property) {
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
             #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
             $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText
-            Write-Debug "SecretValueText is $secret"
+            Write-Debug "URI text is $secret"
         } else {
             $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue
         }
@@ -44,7 +44,7 @@ foreach($p in $params | Get-Member -MemberType *Property) {
             #process replacement here
             $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value
             $additionalParams.Add($p.Name, $valueToAdd);
-            Write-Debug "SecretValueText is $valueToAdd"
+            Write-Debug "URI text is $valueToAdd"
         } else {
             $additionalParams.Add($p.Name, $params.$($p.Name).value);
         }

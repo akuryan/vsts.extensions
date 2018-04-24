@@ -112,11 +112,13 @@ try {
     }
 
     Write-Verbose "Starting ARM deployment...";
-    $deploymentName = "sitecore-$DeploymentType"
 
     if ($DeploymentType -eq "infra") {
+        $deploymentName = "sitecore-infra"
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
     } else {
+        #deployment name is used to generate login to SQL as well - so for msdeploy and redeploy it shall be equal
+        $deploymentName = "sitecore-msdeploy"
         # Fetch output parameters from Sitecore ARM deployment as authoritative source for the rest of web deploy params
         $sitecoreDeployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name "sitecore-infra"
         $sitecoreDeploymentOutput = $sitecoreDeployment.Outputs

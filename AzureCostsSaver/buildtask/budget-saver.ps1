@@ -1,6 +1,6 @@
 $ResourceGroupName = Get-VstsInput -Name resourceGroupName -Require
 $downScaleInput = Get-VstsInput -Name downscaleSelector -Require
-Write-Host "In input downscaleInput we have $downScaleInput"
+Write-Verbose "In input downscaleInput we have $downScaleInput"
 $Downscale = [System.Convert]::ToBoolean($downScaleInput);
 Write-Host "We are going to downscale? $Downscale"
 Write-Host "Resources will be selected from $ResourceGroupName resource group"
@@ -13,7 +13,7 @@ $resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroupName
 
 if (($resources | Measure-Object).Count -le 0)
 {
-    Write-Host "No resources was retrieved for $ResourceGroupName"
+    Write-Host "##vso[task.logissue type=warning;] No resources was retrieved for $ResourceGroupName"
     Exit $false
 }
 
@@ -24,7 +24,7 @@ function ProcessWebApps {
     Write-Host "Processing $whatsProcessing"
     $amount = ($webApps | Measure-Object).Count
     if ($amount -le 0) {
-        Write-Host "No $whatsProcessing was retrieved for $ResourceGroupName"
+        Write-Host "##vso[task.logissue type=warning;] No $whatsProcessing was retrieved for $ResourceGroupName"
         return;
     }
 
@@ -89,7 +89,7 @@ function ProcessVirtualMachines {
     Write-Host "Processing $whatsProcessing"
     $amount = ($vms | Measure-Object).Count
     if ($amount -le 0) {
-        Write-Host "No $whatsProcessing was retrieved for $ResourceGroupName"
+        Write-Host "##vso[task.logissue type=warning;] No $whatsProcessing was retrieved for $ResourceGroupName"
         return;
     }
 
@@ -117,7 +117,7 @@ function ProcessSqlDatabases {
     Write-Host "Processing $whatsProcessing"
     $amount = ($sqlServers | Measure-Object).Count
     if ($amount -le 0) {
-        Write-Host "No $whatsProcessing was retrieved for $ResourceGroupName"
+        Write-Host "##vso[task.logissue type=warning;] No $whatsProcessing was retrieved for $ResourceGroupName"
         return;
     }
 

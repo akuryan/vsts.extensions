@@ -28,6 +28,13 @@ function ProcessWebApps {
         return;
     }
 
+    #hash is needed to get correct worker size
+    $webAppHashSizes = @{}
+    $webAppHashSizes['1'] = "Small"
+    $webAppHashSizes['2'] = "Medium"
+    $webAppHashSizes['3'] = "Large"
+    $webAppHashSizes['4'] = "Extra Large"
+
     Write-Host "There is $amount $whatsProcessing to be processed."
 
     foreach ($farm in $webApps) {
@@ -48,8 +55,9 @@ function ProcessWebApps {
         if ($Downscale) {
             #we need to store current web app sizes in tags
             $tags.costsSaverTier = $webFarmResource.Sku.tier
-            $tags.costsSaverNumberofWorkers = $webFarmResource.Properties.numberOfWorkers
-            $tags.costsSaverWorkerSize = $webFarmResource.Properties.workerSize
+            $tags.costsSaverNumberofWorkers = $webFarmResource.Sku.capacity
+            #from time to time - workerSize returns as Default
+            $tags.costsSaverWorkerSize = $webAppHashSizes[$webFarmResource.Sku.size.Substring(1,1)]
             #write tags to web app
             Set-AzureRmResource -ResourceId $resourceId -Tag $tags -Force
             (Get-AzureRmResource -ResourceId $resourceId).Tags

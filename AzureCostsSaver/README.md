@@ -18,3 +18,7 @@ SQL databases sizes tags are stored on SQL server resource, as they tend to diss
 ## Use case
 
 Downscale Azure resources for Testing and Acceptance environments during nights and weekends to save on costs.
+
+### Details
+
+Please, read [post](https://colours.nl/azure-costs-saver) detailing usage and possible use cases as well.

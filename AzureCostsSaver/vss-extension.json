@@ -11,6 +11,11 @@
             "path": "README.md"
         }
 	},
+    "links": {
+        "getstarted": {
+            "uri": "https://colours.nl/azure-costs-saver"
+        }
+    },
     "repository": {
         "type": "git",
         "uri": "https://github.com/akuryan/vsts.extensions/tree/master/AzureCostsSaver"

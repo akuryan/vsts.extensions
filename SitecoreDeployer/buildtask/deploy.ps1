@@ -11,6 +11,8 @@ $GenerateSas = [System.Convert]::ToBoolean($generateSasInput)
 #get license location
 $licenseLocation = Get-VstsInput -Name licenseLocation -Require
 
+Import-Module $PSScriptRoot\ps_modules\TlsHelper_
+Add-Tls12InSession
 Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
 Initialize-Azure
 

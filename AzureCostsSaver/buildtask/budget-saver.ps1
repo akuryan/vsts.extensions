@@ -5,6 +5,8 @@ $Downscale = [System.Convert]::ToBoolean($downScaleInput);
 Write-Host "We are going to downscale? $Downscale"
 Write-Host "Resources will be selected from $ResourceGroupName resource group"
 
+Import-Module $PSScriptRoot\ps_modules\TlsHelper_
+Add-Tls12InSession
 Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
 Initialize-Azure
 

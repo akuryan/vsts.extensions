@@ -291,7 +291,7 @@ function GenerateIpMaskHashTableFromUserInput {
     $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''}
     $webIP.ipAddress = '127.0.0.1'
     $webIP.subnetMask = '255.255.255.255'
-    $restrictionsHashtable.Add($webIP) | Out-Null
+    $restrictionsHashtable += $webIP
 
     if ([string]::IsNullOrWhiteSpace($ipMaskUserInputString)) {
         Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: IP List is not defined by user"
@@ -300,15 +300,15 @@ function GenerateIpMaskHashTableFromUserInput {
         Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Adding user defined IP list"
         #split on comma
         foreach ($inputIpMask in $ipMaskUserInputString.Split(',')) {
-            $ipAddr = ($inputIpMask.Split('/'))[0].ToString
-            $mask = ($inputIpMask.Split('/'))[1].ToString
+            $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
+            $mask = ($inputIpMask.Split('/'))[1].ToString().Trim()
             if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {
                 $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''}
-                $ipHash.ipAddress = $ipAddr.trim()
-                $ipHash.subnetMask = $mask.trim()
+                $ipHash.ipAddress = $ipAddr
+                $ipHash.subnetMask = $mask
                 Write-Verbose "Adding following IP to restrictions:"
                 Write-Verbose $ipHash
-                $restrictionsHashtable.Add($ipHash) | Out-Null
+                $restrictionsHashtable += $ipHash
             }
         }
     }

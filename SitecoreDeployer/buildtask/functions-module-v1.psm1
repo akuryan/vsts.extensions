@@ -146,3 +146,100 @@ function CheckIfPossiblyUriAndIfNeedToGenerateSas {
         return $false
     }
 }
+
+#this function is called to limit access to processing instance, if it is found
+function LimitAccessToPrc {
+    param (
+        $rgName
+    )
+    #get input
+    $limitPrcAccessInput = Get-VstsInput -Name limitAccesToPrc -Require
+    #convert it to Boolean
+    $LimitPrcAccess = [System.Convert]::ToBoolean($limitPrcAccessInput)
+    if (!$LimitPrcAccess) {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Access to PRC shall not be limited by task"
+        return;
+    }
+
+    $prcInstanceName = Get-VstsInput -Name prcInstanceName;
+    if ([string]::IsNullOrWhiteSpace($prcInstanceName))
+    {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: PRC web app name is not set, falling back to default resource group name + '-prc'"
+        $prcInstanceName = $rgName + "-prc/prc-staging"
+    }
+
+    Write-Verbose "PRC instance name is $prcInstanceName"
+
+    #get list of IP, defined by user
+    $prcIpList = Get-VstsInput -Name prcIpMaskCollection;
+
+    SetWebAppRestrictions -userInputIpList $prcIpList -webAppInstanceName $prcInstanceName -resourceGroupName $rgName
+}
+
+function SetWebAppRestrictions {
+    param (
+        $userInputIpList,
+        $webAppInstanceName,
+        $resourceGroupName
+    )
+    $IpSecurityRestrictions = GenerateIpMaskHashTableFromUserInput -ipMaskUserInputString $userInputIpList
+
+    #get API version to work with Azure Web apps
+    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    #by default, we are supposing we are working with slots
+    $isSlot = $false
+    #if instance name does not contain / - it is not a slot :)
+    if ($webAppInstanceName.contains('/')) {
+        $isSlot = $true
+    }
+
+    #get current web app config
+    if ($isSlot) {
+        Write-Verbose "We are working with slot"
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/slots/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+    } else {
+        Write-Verbose "We are working with web app"
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+    }
+
+    Write-Verbose "Web app configuration received:"
+    Write-Verbose $WebAppConfig
+
+    $WebAppConfig.Properties.ipSecurityRestrictions = $IpSecurityRestrictions;
+    $WebAppConfig | Set-AzureRmResource -ApiVersion $APIVersion -Force | Out-Null
+}
+
+function GenerateIpMaskHashTableFromUserInput {
+    param ( $ipMaskUserInputString )
+
+    $restrictionsHashtable = @()
+    #localhost shall be allowed by default :)
+    $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''}
+    $webIP.ipAddress = '127.0.0.1'
+    $webIP.subnetMask = '255.255.255.255'
+    $restrictionsHashtable.Add($webIP) | Out-Null
+
+    if ([string]::IsNullOrWhiteSpace($ipMaskUserInputString)) {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: IP List is not defined by user"
+    }
+    else {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Adding user defined IP list"
+        #split on comma
+        foreach ($inputIpMask in $ipMaskUserInputString.Split(',')) {
+            $ipAddr = ($inputIpMask.Split('/'))[0].ToString
+            $mask = ($inputIpMask.Split('/'))[1].ToString
+            if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {
+                $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''}
+                $ipHash.ipAddress = $ipAddr
+                $ipHash.subnetMask = $mask
+                Write-Verbose "Adding following IP to restrictions:"
+                Write-Verbose $ipHash
+                $restrictionsHashtable.Add($ipHash) | Out-Null
+            }
+        }
+    }
+    #Display content for debug reasons
+    Write-Verbose "These IP restrictions will be set"
+    Write-Verbose $restrictionsHashtable;
+    return $restrictionsHashtable;
+}

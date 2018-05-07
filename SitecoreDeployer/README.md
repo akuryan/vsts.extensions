@@ -37,3 +37,5 @@ Allows to limit access to PRC and REP roles as advised at [Sitecore documentatio
 I shall note, that inputs are not validated strictly, so - it will try to write whatever you specify to restrictions
 
 ```Limit access to PRC role by IP``` - if selected (true by default) it allows to define IP-based restriction (by default, all IP's are denied access to PRC instance). If you are already deploying something to web app, and you do have ipRestriction set in your web.config - do not use this section, as it _could_ conflict with existing set of rules (for example, duplicate IP specified).
+
+```Limit access to REP role by IP``` - if selected (true by default) it allows to define IP-based restriction (Sitecore recommends to allow only Azure IPs, but I narrow it here to outbound IPs of Azure Web apps in our resource group). If you are already deploying something to web app, and you do have ipRestriction set in your web.config - do not use this section, as it _could_ conflict with existing set of rules (for example, duplicate IP specified).

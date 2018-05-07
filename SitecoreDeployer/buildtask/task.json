@@ -210,6 +210,33 @@
       "required": false,
       "helpMarkDown": "By default, Sitecore advises at https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment to make PRC role not accessible to anyone, but you can define additional IPs, which are allowed access by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255')",
       "visibleRule": "limitAccesToPrc = true"
+    },
+    {
+      "name": "limitAccesToRep",
+      "type": "boolean",
+      "label": "Limit access to REP role by IP",
+      "defaultValue": "true",
+      "required": false,
+      "groupName": "security",
+      "helpMarkDown": "Allows to limit access to reporting role by setting IP whitelist."
+    },
+    {
+      "name": "repInstanceName",
+      "type": "string",
+      "label": "REP instance name",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "If Reporting role slot name does not conform to rule 'resourceGroupName + -rep/rep-staging', please, specify it here.",
+      "visibleRule": "limitAccesToRep = true"
+    },
+    {
+      "name": "repIpMaskCollection",
+      "type": "string",
+      "label": "IP/Mask comma-separated collection",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "By default, Sitecore advises at https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment to make REP role not accessible to anyone, but you can define additional IPs, which are allowed access by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255')",
+      "visibleRule": "limitAccesToRep = true"
     }
   ],
   "instanceNameFormat": "Deploy Sitecore",

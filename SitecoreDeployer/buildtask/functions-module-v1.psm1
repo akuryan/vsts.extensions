@@ -161,19 +161,93 @@ function LimitAccessToPrc {
         return;
     }
 
-    $prcInstanceName = Get-VstsInput -Name prcInstanceName;
-    if ([string]::IsNullOrWhiteSpace($prcInstanceName))
+    $instanceNamePrc = Get-VstsInput -Name prcInstanceName;
+    if ([string]::IsNullOrWhiteSpace($instanceNamePrc))
     {
         Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: PRC web app name is not set, falling back to default resource group name + '-prc'"
-        $prcInstanceName = $rgName + "-prc/prc-staging"
+        $instanceNamePrc = $rgName + "-prc/prc-staging"
     }
 
-    Write-Verbose "PRC instance name is $prcInstanceName"
+    Write-Verbose "PRC instance name is $instanceNamePrc"
 
     #get list of IP, defined by user
     $prcIpList = Get-VstsInput -Name prcIpMaskCollection;
+    Write-Verbose "We are going to write this IP restrictions to PRC web app: $prcIpList"
 
-    SetWebAppRestrictions -userInputIpList $prcIpList -webAppInstanceName $prcInstanceName -resourceGroupName $rgName
+    SetWebAppRestrictions -userInputIpList $prcIpList -webAppInstanceName $instanceNamePrc -resourceGroupName $rgName
+}
+
+function LimitAccessToRep {
+    param (
+        $rgName
+    )
+    #get input
+    $limitRepAccessInput = Get-VstsInput -Name limitAccesToRep -Require
+    #convert it to Boolean
+    $LimitPrcAccess = [System.Convert]::ToBoolean($limitRepAccessInput)
+    if (!$LimitPrcAccess) {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToRep: Access to REP shall not be limited by task"
+        return;
+    }
+
+    $instanceNameRep = Get-VstsInput -Name repInstanceName;
+    if ([string]::IsNullOrWhiteSpace($instanceNameRep))
+    {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToRep: REP web app name is not set, falling back to default resource group name + '-rep/rep-staging'"
+        $prcInstanceName = $rgName + "-rep/rep-staging"
+    }
+
+    Write-Verbose "REP instance name is $instanceNameRep"
+
+    #get list of IP, defined by user
+    $repIpList = Get-VstsInput -Name repIpMaskCollection;
+    Write-Verbose "Defined by user ip collection is $repIpList"
+    #collect outbount IP addresses
+    $collectedOutBoundIps = CollectOutBoundIpAddresses -resourceGroupName $rgName
+    if (![string]::IsNullOrWhiteSpace($collectedOutBoundIps)) {
+        #if provided reporting IP list is not emptry and not ends with comma - we shall add comma to the end  here
+        if (![string]::IsNullOrWhiteSpace($repIpList)) {
+            if ($repIpList -notmatch '.+?,$') {
+                $repIpList += ','
+            }
+        }
+        #add outbound IPs to provided by user input if any
+        $repIpList += $collectedOutBoundIps
+        $repIpList = $repIpList.TrimEnd(',');
+    }
+
+    Write-Verbose "We are going to write this IP restrictions to REP web app: $repIpList"
+
+    SetWebAppRestrictions -userInputIpList $repIpList -webAppInstanceName $instanceNameRep -resourceGroupName $rgName
+}
+
+function CollectOutBoundIpAddresses {
+    param ($resourceGroupName)
+
+    $collectedIps = "";
+    #Get all resources, which are in resource groups, which contains our name
+    $resources = Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName
+    $resourcesAmount = ($resources | Measure-Object).Count
+    if ($resourcesAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any resources in given resource group"
+        return $collectedIps;
+    }
+    $webApps = $resources.where( {$_.ResourceType -eq "Microsoft.Web/sites" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+    $webAppsAmount = ($webApps | Measure-Object).Count
+    if ($webAppsAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any web apps in given resource group"
+        return $collectedIps;
+    }
+
+    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    foreach ($webApp in $webApps) {
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webApp.Name -ResourceGroupName $ResourceGroupName -ApiVersion $APIVersion)
+        foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
+            $valueToAdd = $ip + "/255.255.255.255,";
+            $collectedIps += $valueToAdd;
+        }
+    }
+    return $collectedIps;
 }
 
 function SetWebAppRestrictions {
@@ -230,8 +304,8 @@ function GenerateIpMaskHashTableFromUserInput {
             $mask = ($inputIpMask.Split('/'))[1].ToString
             if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {
                 $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''}
-                $ipHash.ipAddress = $ipAddr
-                $ipHash.subnetMask = $mask
+                $ipHash.ipAddress = $ipAddr.trim()
+                $ipHash.subnetMask = $mask.trim()
                 Write-Verbose "Adding following IP to restrictions:"
                 Write-Verbose $ipHash
                 $restrictionsHashtable.Add($ipHash) | Out-Null
@@ -239,7 +313,7 @@ function GenerateIpMaskHashTableFromUserInput {
         }
     }
     #Display content for debug reasons
-    Write-Verbose "These IP restrictions will be set"
+    Write-Verbose "These IP restrictions will be set:"
     Write-Verbose $restrictionsHashtable;
     return $restrictionsHashtable;
 }

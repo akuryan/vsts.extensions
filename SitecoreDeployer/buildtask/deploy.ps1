@@ -129,7 +129,8 @@ try {
 
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
     }
-
+    LimitAccessToPrc -rgName $RgName;
+    LimitAccessToRep -rgName $RgName;
     Write-Host "Deployment Complete.";
 }
 catch {

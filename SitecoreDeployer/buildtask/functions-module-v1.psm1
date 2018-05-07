@@ -147,7 +147,96 @@ function CheckIfPossiblyUriAndIfNeedToGenerateSas {
     }
 }
 
-#this function is called to limit access to processing instance, if it is found
+function CollectOutBoundIpAddresses {
+    param ($resourceGroupName)
+
+    $collectedIps = "";
+    #Get all resources, which are in resource groups, which contains our name
+    $resources = Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName
+    $resourcesAmount = ($resources | Measure-Object).Count
+    if ($resourcesAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any resources in given resource group"
+        return $collectedIps;
+    }
+    $webApps = $resources.where( {$_.ResourceType -eq "Microsoft.Web/sites" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+    $webAppsAmount = ($webApps | Measure-Object).Count
+    if ($webAppsAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any web apps in given resource group"
+        return $collectedIps;
+    }
+
+    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    foreach ($webApp in $webApps) {
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webApp.Name -ResourceGroupName $ResourceGroupName -ApiVersion $APIVersion)
+        foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
+            $valueToAdd = $ip + "/255.255.255.255,";
+            $collectedIps += $valueToAdd;
+        }
+    }
+    return $collectedIps.TrimEnd(',');
+}
+
+function SetWebAppRestrictions {
+    param (
+        $userInputIpList,
+        $webAppInstanceName,
+        $resourceGroupName
+    )
+    $restrictionsHashtable = @()
+    #localhost shall be allowed by default :)
+    $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''}
+    $webIP.ipAddress = '127.0.0.1'
+    $webIP.subnetMask = '255.255.255.255'
+    $restrictionsHashtable += $webIP
+
+    if ([string]::IsNullOrWhiteSpace($userInputIpList)) {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: IP List is not defined by user"
+    }
+    else {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Adding user defined IP list"
+        #split on comma
+        foreach ($inputIpMask in $userInputIpList.Split(',')) {
+            $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
+            $mask = ($inputIpMask.Split('/'))[1].ToString().Trim()
+            if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {
+                $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''}
+                $ipHash.ipAddress = $ipAddr
+                $ipHash.subnetMask = $mask
+                Write-Verbose "Adding following IP to restrictions:"
+                Write-Verbose $ipHash
+                $restrictionsHashtable += $ipHash
+            }
+        }
+    }
+    #Display content for debug reasons
+    Write-Verbose "These IP restrictions will be set:"
+    Write-Verbose $restrictionsHashtable;
+
+    #get API version to work with Azure Web apps
+    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    #by default, we are supposing we are working with slots
+    $isSlot = $false
+    #if instance name does not contain / - it is not a slot :)
+    if ($webAppInstanceName.contains('/')) {
+        $isSlot = $true
+    }
+
+    #get current web app config
+    if ($isSlot) {
+        Write-Verbose "We are working with slot"
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/slots/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+    } else {
+        Write-Verbose "We are working with web app"
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+    }
+
+    Write-Verbose "Web app configuration received:"
+    Write-Verbose $WebAppConfig
+
+    $WebAppConfig.Properties.ipSecurityRestrictions = $restrictionsHashtable;
+    $WebAppConfig | Set-AzureRmResource -ApiVersion $APIVersion -Force | Out-Null
+}
+
 function LimitAccessToPrc {
     param (
         $rgName
@@ -213,107 +302,9 @@ function LimitAccessToRep {
         }
         #add outbound IPs to provided by user input if any
         $repIpList += $collectedOutBoundIps
-        $repIpList = $repIpList.TrimEnd(',');
     }
 
     Write-Verbose "We are going to write this IP restrictions to REP web app: $repIpList"
 
     SetWebAppRestrictions -userInputIpList $repIpList -webAppInstanceName $instanceNameRep -resourceGroupName $rgName
-}
-
-function CollectOutBoundIpAddresses {
-    param ($resourceGroupName)
-
-    $collectedIps = "";
-    #Get all resources, which are in resource groups, which contains our name
-    $resources = Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName
-    $resourcesAmount = ($resources | Measure-Object).Count
-    if ($resourcesAmount -le 0) {
-        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any resources in given resource group"
-        return $collectedIps;
-    }
-    $webApps = $resources.where( {$_.ResourceType -eq "Microsoft.Web/sites" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-    $webAppsAmount = ($webApps | Measure-Object).Count
-    if ($webAppsAmount -le 0) {
-        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any web apps in given resource group"
-        return $collectedIps;
-    }
-
-    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
-    foreach ($webApp in $webApps) {
-        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webApp.Name -ResourceGroupName $ResourceGroupName -ApiVersion $APIVersion)
-        foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
-            $valueToAdd = $ip + "/255.255.255.255,";
-            $collectedIps += $valueToAdd;
-        }
-    }
-    return $collectedIps;
-}
-
-function SetWebAppRestrictions {
-    param (
-        $userInputIpList,
-        $webAppInstanceName,
-        $resourceGroupName
-    )
-    $IpSecurityRestrictions = GenerateIpMaskHashTableFromUserInput -ipMaskUserInputString $userInputIpList
-
-    #get API version to work with Azure Web apps
-    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
-    #by default, we are supposing we are working with slots
-    $isSlot = $false
-    #if instance name does not contain / - it is not a slot :)
-    if ($webAppInstanceName.contains('/')) {
-        $isSlot = $true
-    }
-
-    #get current web app config
-    if ($isSlot) {
-        Write-Verbose "We are working with slot"
-        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/slots/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
-    } else {
-        Write-Verbose "We are working with web app"
-        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
-    }
-
-    Write-Verbose "Web app configuration received:"
-    Write-Verbose $WebAppConfig
-
-    $WebAppConfig.Properties.ipSecurityRestrictions = $IpSecurityRestrictions;
-    $WebAppConfig | Set-AzureRmResource -ApiVersion $APIVersion -Force | Out-Null
-}
-
-function GenerateIpMaskHashTableFromUserInput {
-    param ( $ipMaskUserInputString )
-
-    $restrictionsHashtable = @()
-    #localhost shall be allowed by default :)
-    $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''}
-    $webIP.ipAddress = '127.0.0.1'
-    $webIP.subnetMask = '255.255.255.255'
-    $restrictionsHashtable += $webIP
-
-    if ([string]::IsNullOrWhiteSpace($ipMaskUserInputString)) {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: IP List is not defined by user"
-    }
-    else {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Adding user defined IP list"
-        #split on comma
-        foreach ($inputIpMask in $ipMaskUserInputString.Split(',')) {
-            $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
-            $mask = ($inputIpMask.Split('/'))[1].ToString().Trim()
-            if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {
-                $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''}
-                $ipHash.ipAddress = $ipAddr
-                $ipHash.subnetMask = $mask
-                Write-Verbose "Adding following IP to restrictions:"
-                Write-Verbose $ipHash
-                $restrictionsHashtable += $ipHash
-            }
-        }
-    }
-    #Display content for debug reasons
-    Write-Verbose "These IP restrictions will be set:"
-    Write-Verbose $restrictionsHashtable;
-    return $restrictionsHashtable;
 }

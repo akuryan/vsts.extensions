@@ -164,7 +164,7 @@ function LimitAccessToPrc {
     $instanceNamePrc = Get-VstsInput -Name prcInstanceName;
     if ([string]::IsNullOrWhiteSpace($instanceNamePrc))
     {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: PRC web app name is not set, falling back to default resource group name + '-prc'"
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: PRC web app name is not set, falling back to default resource group name + '-prc/prc-staging'"
         $instanceNamePrc = $rgName + "-prc/prc-staging"
     }
 

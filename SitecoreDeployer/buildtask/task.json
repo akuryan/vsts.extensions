@@ -188,7 +188,7 @@
       "name": "limitAccesToPrc",
       "type": "boolean",
       "label": "Limit access to PRC role by IP",
-      "defaultValue": "true",
+      "defaultValue": "false",
       "required": false,
       "groupName": "security",
       "helpMarkDown": "Allows to limit access to processing role by setting IP whitelist."
@@ -215,7 +215,7 @@
       "name": "limitAccesToRep",
       "type": "boolean",
       "label": "Limit access to REP role by IP",
-      "defaultValue": "true",
+      "defaultValue": "false",
       "required": false,
       "groupName": "security",
       "helpMarkDown": "Allows to limit access to reporting role by setting IP whitelist."

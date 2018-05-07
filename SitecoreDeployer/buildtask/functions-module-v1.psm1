@@ -187,6 +187,8 @@ function SetWebAppRestrictions {
     $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''}
     $webIP.ipAddress = '127.0.0.1'
     $webIP.subnetMask = '255.255.255.255'
+    Write-Verbose "Adding following IP to restrictions:"
+    Write-Verbose $webIP
     $restrictionsHashtable += $webIP
 
     if ([string]::IsNullOrWhiteSpace($userInputIpList)) {
@@ -208,9 +210,6 @@ function SetWebAppRestrictions {
             }
         }
     }
-    #Display content for debug reasons
-    Write-Verbose "These IP restrictions will be set:"
-    Write-Verbose $restrictionsHashtable;
 
     #get API version to work with Azure Web apps
     $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];

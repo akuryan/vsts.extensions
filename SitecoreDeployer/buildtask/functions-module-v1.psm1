@@ -266,7 +266,7 @@ function LimitAccessToPrc {
     Write-Verbose "PRC instance name is $instanceNamePrc"
 
     #get list of IP, defined by user
-    $prcIpList = Get-VstsInput -Name prcIpMaskCollection;
+    $prcIpList = Get-VstsInput -Name ipMaskCollection;
     Write-Verbose "We are going to write this IP restrictions to PRC web app: $prcIpList"
 
     SetWebAppRestrictions -userInputIpList $prcIpList -webAppInstanceName $instanceNamePrc -resourceGroupName $rgName
@@ -295,7 +295,7 @@ function LimitAccessToRep {
     Write-Verbose "REP instance name is $instanceNameRep"
 
     #get list of IP, defined by user
-    $repIpList = Get-VstsInput -Name repIpMaskCollection;
+    $repIpList = Get-VstsInput -Name ipMaskCollection;
     Write-Verbose "Defined by user ip collection is $repIpList"
     #collect outbount IP addresses
     $collectedOutBoundIps = CollectOutBoundIpAddresses -resourceGroupName $rgName

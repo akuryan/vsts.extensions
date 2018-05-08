@@ -204,16 +204,6 @@
       "visibleRule": "limitAccesToPrc = true"
     },
     {
-      "name": "prcIpMaskCollection",
-      "type": "string",
-      "label": "IP/Mask comma-separated collection",
-      "defaultValue": "",
-      "required": false,
-      "groupName": "security",
-      "helpMarkDown": "By default, Sitecore advises at https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment to make PRC role not accessible to anyone, but you can define additional IPs, which are allowed access by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255')",
-      "visibleRule": "limitAccesToPrc = true"
-    },
-    {
       "name": "limitAccesToRep",
       "type": "boolean",
       "label": "Limit access to REP role by IP",
@@ -233,14 +223,14 @@
       "visibleRule": "limitAccesToRep = true"
     },
     {
-      "name": "repIpMaskCollection",
+      "name": "ipMaskCollection",
       "type": "string",
       "label": "IP/Mask comma-separated collection",
       "defaultValue": "",
       "required": false,
       "groupName": "security",
-      "helpMarkDown": "By default, Sitecore advises at https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment to make REP role not accessible to anyone, but you can define additional IPs, which are allowed access by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255')",
-      "visibleRule": "limitAccesToRep = true"
+      "helpMarkDown": "By default, Sitecore advises at https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment to make PRC role not accessible to anyone and REP role to be accessible to Azure only. Here you can define additional IPs, which are allowed access by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
+      "visibleRule": "limitAccesToRep = true || limitAccesToPrc = true"
     }
   ],
   "instanceNameFormat": "Deploy Sitecore",

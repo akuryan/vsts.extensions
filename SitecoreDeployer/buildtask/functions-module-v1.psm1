@@ -220,6 +220,13 @@ function SetWebAppRestrictions {
         $isSlot = $true
     }
 
+    #get all resrouces in current resource group, and check if resource is present there
+    $webAppResource = (Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName).where({$_.Name -eq "$webAppInstanceName" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+    #measure found amount and if less or equal to 0 - we could not find web app
+    if (($webAppResource | Measure-Object).Count -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Could not find web app $webAppInstanceName in resource group $ResourceGroupName. Returning back"
+        return;
+    }
     #get current web app config
     if ($isSlot) {
         Write-Verbose "We are working with slot"

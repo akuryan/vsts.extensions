@@ -11,6 +11,18 @@ $GenerateSas = [System.Convert]::ToBoolean($generateSasInput)
 #get license location
 $licenseLocation = Get-VstsInput -Name licenseLocation -Require
 
+#get input for security features
+#PRC role
+$limitPrcAccessInput = Get-VstsInput -Name limitAccesToPrc -Require
+$instanceNamePrc = Get-VstsInput -Name prcInstanceName;
+#REP role
+$limitRepAccessInput = Get-VstsInput -Name limitAccesToRep -Require
+$instanceNameRep = Get-VstsInput -Name repInstanceName;
+
+#users IP/Mask list as string
+$ipList = Get-VstsInput -Name ipMaskCollection;
+
+
 Import-Module $PSScriptRoot\ps_modules\TlsHelper_
 Add-Tls12InSession
 Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
@@ -129,8 +141,10 @@ try {
 
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
     }
-    LimitAccessToPrc -rgName $RgName;
-    LimitAccessToRep -rgName $RgName;
+
+    LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
+
+    LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
     Write-Host "Deployment Complete.";
 }
 catch {

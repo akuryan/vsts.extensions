@@ -243,74 +243,61 @@ function SetWebAppRestrictions {
     $WebAppConfig | Set-AzureRmResource -ApiVersion $APIVersion -Force | Out-Null
 }
 
-function LimitAccessToPrc {
+function GenerateInstanceName {
     param (
-        $rgName
+        $rgName,
+        $roleName
     )
-    #get input
-    $limitPrcAccessInput = Get-VstsInput -Name limitAccesToPrc -Require
-    #convert it to Boolean
-    $LimitPrcAccess = [System.Convert]::ToBoolean($limitPrcAccessInput)
-    if (!$LimitPrcAccess) {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Access to PRC shall not be limited by task"
-        return;
-    }
 
-    $instanceNamePrc = Get-VstsInput -Name prcInstanceName;
-    if ([string]::IsNullOrWhiteSpace($instanceNamePrc))
-    {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: PRC web app name is not set, falling back to default resource group name + '-prc/prc-staging'"
-        $instanceNamePrc = $rgName + "-prc/prc-staging"
-    }
-
-    Write-Verbose "PRC instance name is $instanceNamePrc"
-
-    #get list of IP, defined by user
-    $prcIpList = Get-VstsInput -Name ipMaskCollection;
-    Write-Verbose "We are going to write this IP restrictions to PRC web app: $prcIpList"
-
-    SetWebAppRestrictions -userInputIpList $prcIpList -webAppInstanceName $instanceNamePrc -resourceGroupName $rgName
+    $generatedInstanceName = $rgName + "-" + $roleName + "/" + $roleName + "-staging";
+    Write-Verbose "GenerateInstanceName: instance name for role $roleName is $generatedInstanceName"
+    return $generatedInstanceName
 }
 
-function LimitAccessToRep {
+function LimitAccessToInstance {
     param (
-        $rgName
+        $rgName,
+        $instanceName,
+        $instanceRole,
+        $limitAccessToInstanceAsString,
+        $ipMaskCollectionUserInput
     )
-    #get input
-    $limitRepAccessInput = Get-VstsInput -Name limitAccesToRep -Require
+
+    $instanceRole = $instanceRole.ToLower();
     #convert it to Boolean
-    $LimitPrcAccess = [System.Convert]::ToBoolean($limitRepAccessInput)
-    if (!$LimitPrcAccess) {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToRep: Access to REP shall not be limited by task"
+    $LimitInstanceAccess = [System.Convert]::ToBoolean($limitAccessToInstanceAsString)
+    if (!$LimitInstanceAccess) {
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToInstance: Access to $instanceRole role shall not be limited by task"
         return;
     }
 
-    $instanceNameRep = Get-VstsInput -Name repInstanceName;
-    if ([string]::IsNullOrWhiteSpace($instanceNameRep))
+    if ([string]::IsNullOrWhiteSpace($instanceName))
     {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToRep: REP web app name is not set, falling back to default resource group name + '-rep/rep-staging'"
-        $instanceNameRep = $rgName + "-rep/rep-staging"
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToInstance: $instanceRole web app name is not set, falling back to default resource group name + '-roleName/roleName-staging'"
+        $instanceName = GenerateInstanceName -rgName $rgName -roleName $instanceRole
     }
 
-    Write-Verbose "REP instance name is $instanceNameRep"
+    Write-Verbose "$instanceRole instance name is $instanceName"
 
-    #get list of IP, defined by user
-    $repIpList = Get-VstsInput -Name ipMaskCollection;
-    Write-Verbose "Defined by user ip collection is $repIpList"
-    #collect outbount IP addresses
-    $collectedOutBoundIps = CollectOutBoundIpAddresses -resourceGroupName $rgName
-    if (![string]::IsNullOrWhiteSpace($collectedOutBoundIps)) {
-        #if provided reporting IP list is not emptry and not ends with comma - we shall add comma to the end  here
-        if (![string]::IsNullOrWhiteSpace($repIpList)) {
-            if ($repIpList -notmatch '.+?,$') {
-                $repIpList += ','
+    Write-Verbose "Defined by user ip collection is $ipMaskCollectionUserInput"
+    #reporting instance shall be accessible by all other instances as well
+    if ($instanceRole -eq "rep") {
+        Write-Verbose "Collecting outbound IPs for $instanceRole role"
+        #collect outbount IP addresses
+        $collectedOutBoundIps = CollectOutBoundIpAddresses -resourceGroupName $rgName
+        if (![string]::IsNullOrWhiteSpace($collectedOutBoundIps)) {
+            #if provided reporting IP list is not emptry and not ends with comma - we shall add comma to the end  here
+            if (![string]::IsNullOrWhiteSpace($ipMaskCollectionUserInput)) {
+                if ($ipMaskCollectionUserInput -notmatch '.+?,$') {
+                    $ipMaskCollectionUserInput += ','
+                }
             }
+            #add outbound IPs to provided by user input if any
+            $ipMaskCollectionUserInput += $collectedOutBoundIps
         }
-        #add outbound IPs to provided by user input if any
-        $repIpList += $collectedOutBoundIps
     }
 
-    Write-Verbose "We are going to write this IP restrictions to REP web app: $repIpList"
+    Write-Verbose "We are going to write this IP restrictions to $instanceRole web app: $ipMaskCollectionUserInput"
 
-    SetWebAppRestrictions -userInputIpList $repIpList -webAppInstanceName $instanceNameRep -resourceGroupName $rgName
+    SetWebAppRestrictions -userInputIpList $ipMaskCollectionUserInput -webAppInstanceName $instanceNameRep -resourceGroupName $rgName
 }

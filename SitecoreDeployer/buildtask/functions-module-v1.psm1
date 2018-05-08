@@ -299,5 +299,5 @@ function LimitAccessToInstance {
 
     Write-Verbose "We are going to write this IP restrictions to $instanceRole web app: $ipMaskCollectionUserInput"
 
-    SetWebAppRestrictions -userInputIpList $ipMaskCollectionUserInput -webAppInstanceName $instanceNameRep -resourceGroupName $rgName
+    SetWebAppRestrictions -userInputIpList $ipMaskCollectionUserInput -webAppInstanceName $instanceName -resourceGroupName $rgName
 }

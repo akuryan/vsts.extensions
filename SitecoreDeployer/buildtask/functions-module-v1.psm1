@@ -192,10 +192,10 @@ function SetWebAppRestrictions {
     $restrictionsHashtable += $webIP
 
     if ([string]::IsNullOrWhiteSpace($userInputIpList)) {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: IP List is not defined by user"
+        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined by user"
     }
     else {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToPrc: Adding user defined IP list"
+        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Adding user defined IP list"
         #split on comma
         foreach ($inputIpMask in $userInputIpList.Split(',')) {
             $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
@@ -282,7 +282,7 @@ function LimitAccessToRep {
     if ([string]::IsNullOrWhiteSpace($instanceNameRep))
     {
         Write-Host "##vso[task.logissue type=warning;] LimitAccessToRep: REP web app name is not set, falling back to default resource group name + '-rep/rep-staging'"
-        $prcInstanceName = $rgName + "-rep/rep-staging"
+        $instanceNameRep = $rgName + "-rep/rep-staging"
     }
 
     Write-Verbose "REP instance name is $instanceNameRep"

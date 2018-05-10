@@ -195,7 +195,7 @@ function SetWebAppRestrictions {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined by user"
     }
     else {
-        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Adding user defined IP list"
+        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Adding IP list (defined by user + collected outbound IP for REP instance)"
         #split on comma
         foreach ($inputIpMask in $userInputIpList.Split(',')) {
             $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()

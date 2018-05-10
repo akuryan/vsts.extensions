@@ -191,7 +191,7 @@
       "defaultValue": "true",
       "required": false,
       "groupName": "security",
-      "helpMarkDown": "Allows to limit access to processing role by setting IP whitelist."
+      "helpMarkDown": "Blocks access to PRC role completely, as advised by Sitecore"
     },
     {
       "name": "prcInstanceName",
@@ -229,8 +229,8 @@
       "defaultValue": "",
       "required": false,
       "groupName": "security",
-      "helpMarkDown": "By default, Sitecore advises at https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment to make PRC role not accessible to anyone and REP role to be accessible to Azure only. Here you can define additional IPs, which are allowed access by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
-      "visibleRule": "limitAccesToRep = true || limitAccesToPrc = true"
+      "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP instance by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
+      "visibleRule": "limitAccesToRep = true"
     }
   ],
   "instanceNameFormat": "Deploy Sitecore",

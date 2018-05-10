@@ -14,6 +14,7 @@ $licenseLocation = Get-VstsInput -Name licenseLocation -Require
 #get input for security features
 #PRC role
 $limitPrcAccessInput = Get-VstsInput -Name limitAccesToPrc -Require
+$limitPrcAccess = [System.Convert]::ToBoolean($limitPrcAccessInput)
 $instanceNamePrc = Get-VstsInput -Name prcInstanceName;
 #REP role
 $limitRepAccessInput = Get-VstsInput -Name limitAccesToRep -Require
@@ -35,7 +36,33 @@ $additionalParams = New-Object -TypeName Hashtable;
 
 $params = Get-Content $ArmParametersPath -Raw | ConvertFrom-Json;
 
+#check template - what parameter is used to limit access to CM and PRC role in template
+if ($limitPrcAccess) {
+    $clientIpString = "security_clientIp"
+    $clientMaskString = "security_clientIpMask"
+    #parse template - which parameter is used for ip security
+    if (Select-String -Path $ArmTemplatePath -Pattern $clientIpString -SimpleMatch -Quiet) {
+        #do nothing, we are OK
+    } elseif (Select-String -Path $ArmTemplatePath -Pattern "securityClientIp" -SimpleMatch -Quiet) {
+        $clientIpString = "securityClientIp"
+        $clientMaskString = "securityClientIpMask"
+    } else {
+        #we are not finding known strings for limiting PRC access
+        $limitPrcAccess = $False
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToInstance: Access to PRC role shall not be limited by task, as we could not figure out template parameter for this"
+    }
+}
+
+$ipSecuritySetInTemplateParams = $False
+
 foreach($p in $params | Get-Member -MemberType *Property) {
+    #if we need to limit access to processing - we need to check, if it is not limited already at template parameters
+    if ($limitPrcAccess) {
+        if ($p.Name.ToLower() -eq $clientIpString.ToLower()) {
+            Write-Host "##vso[task.logissue type=warning;] LimitAccessToInstance: Access to PRC role shall not be limited by task - it is limited in template"
+            $ipSecuritySetInTemplateParams = $True
+        }
+    }
 	# Check if the parameter is a reference to a Key Vault secret
 	if (($params.$($p.Name).reference) -and
 		($params.$($p.Name).reference.keyVault) -and
@@ -65,6 +92,12 @@ foreach($p in $params | Get-Member -MemberType *Property) {
             $additionalParams.Add($p.Name, $params.$($p.Name).value);
         }
 	}
+}
+
+if ($limitPrcAccess -And !$ipSecuritySetInTemplateParams) {
+    #ip security is not set in parameters file and we will add it here (due to configuration of PRC SCWDP packages in SC 8.2.*-9.0.1 - we can really set only one IP allowed for PRC, which shall be 127.0.0.1 to allow KeepAlive and startup app init work correctly). Word of warning though - this means, that CM package will be deployed _initially_ with same limitation, so you shall ensure that you are deploying web.config with your own ipSecurity as well
+    $additionalParams.Add($clientIpString, "127.0.0.1");
+    $additionalParams.Add($clientMaskString, "255.255.255.255");
 }
 
 Write-Verbose "Do we need to generate SAS? $GenerateSas"
@@ -141,8 +174,6 @@ try {
 
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
     }
-
-    LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
 
     LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
     Write-Host "Deployment Complete.";

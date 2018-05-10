@@ -229,7 +229,7 @@
       "defaultValue": "",
       "required": false,
       "groupName": "security",
-      "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP instance by defining comma-separated list of IP/Mask here (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
+      "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP instance by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
       "visibleRule": "limitAccesToRep = true"
     }
   ],

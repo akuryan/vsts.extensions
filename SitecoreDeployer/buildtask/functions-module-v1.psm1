@@ -273,8 +273,8 @@ function LimitAccessToInstance {
 
     if ([string]::IsNullOrWhiteSpace($instanceName))
     {
-        Write-Host "##vso[task.logissue type=warning;] LimitAccessToInstance: $instanceRole web app name is not set, falling back to default resource group name + '-roleName/roleName-staging'"
         $instanceName = GenerateInstanceName -rgName $rgName -roleName $instanceRole
+        Write-Host "##vso[task.logissue type=warning;] LimitAccessToInstance: $instanceRole web app name is not set, falling back to default resource group name + '-roleName/roleName-staging' - $instanceName"
     }
 
     Write-Verbose "$instanceRole instance name is $instanceName"

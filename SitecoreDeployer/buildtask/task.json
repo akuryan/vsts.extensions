@@ -30,7 +30,6 @@
       "helpMarkDown": "",
       "defaultValue": "ConnectedServiceNameARM",
       "options": {
-        "ConnectedServiceName": "Azure Classic",
         "ConnectedServiceNameARM": "Azure Resource Manager"
       }
     },

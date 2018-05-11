@@ -119,12 +119,11 @@
       "type": "pickList",
       "label": "Deployment type",
       "required": true,
-      "helpMarkDown": "Select deployment type according to definition: Infrastructure creates required resources; Msdeploy - deploys vanilla Sitecore and clean databases; Redeploy - deploys vanilla Sitecore without databases",
+      "helpMarkDown": "Select deployment type according to definition: Infrastructure creates required resources; Deploy - gets output of Infra deployment, adds it to collection of parameters and deploys vanilla Sitecore (with or without databases - depends on template)",
       "defaultValue": "redeploy",
       "options": {
         "infra": "Infrastructure",
-        "msdeploy": "Msdeploy",
-        "redeploy": "Redeploy"
+        "redeploy": "Deploy"
       }
     },
     {

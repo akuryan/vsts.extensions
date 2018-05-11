@@ -22,9 +22,7 @@ Select your Azure subscription in which Sitecore resources shall be deployed in 
 
     1. Infra - will deploy infrastructure only
 
-    1. MsDeploy - will deploy vaniall Sitecore with database
-
-    1. Redeploy - will deploy vanilla Sitecore without databases
+    1. Deploy - will deploy vanilla Sitecore without databases
 
 ```Generate SAS``` - if set to ```True```, then, if your scwdp packages are located on storage account at same subscription, then powershell will generate short-time SAS signatures for them.
 

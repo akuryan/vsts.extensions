@@ -5,7 +5,7 @@
 	"name": "Sitecore to Azure Deployer",
 	"description": "A VSTS Release Task to deploy Sitecore in Azure",
 	"publisher": "anton-kuryan",
-	"public": false,
+	"public": true,
     "content": {
         "details": {
             "path": "README.md"

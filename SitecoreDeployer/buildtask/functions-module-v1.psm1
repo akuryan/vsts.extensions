@@ -195,7 +195,7 @@ function SetWebAppRestrictions {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined by user"
     }
     else {
-        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Adding IP list (defined by user + collected outbound IP for REP instance)"
+        Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Defining IP list (defined by user + collected outbound IP for $webAppInstanceName instance)"
         #split on comma
         foreach ($inputIpMask in $userInputIpList.Split(',')) {
             $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
@@ -281,7 +281,7 @@ function LimitAccessToInstance {
 
     Write-Verbose "Defined by user ip collection is $ipMaskCollectionUserInput"
     #reporting instance shall be accessible by all other instances as well
-    if ($instanceRole -eq "rep") {
+    if ($instanceRole -eq "rep" -Or $instanceRole -eq "cm") {
         Write-Verbose "Collecting outbound IPs for $instanceRole role"
         #collect outbount IP addresses
         $collectedOutBoundIps = CollectOutBoundIpAddresses -resourceGroupName $rgName

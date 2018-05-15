@@ -19,6 +19,9 @@ $instanceNamePrc = Get-VstsInput -Name prcInstanceName;
 #REP role
 $limitRepAccessInput = Get-VstsInput -Name limitAccesToRep -Require
 $instanceNameRep = Get-VstsInput -Name repInstanceName;
+#CM role
+$limitCmAccessInput = Get-VstsInput -Name limitAccesToCm -Require
+$instanceNameCm = Get-VstsInput -Name cmInstanceName;
 
 #users IP/Mask list as string
 $ipList = Get-VstsInput -Name ipMaskCollection;
@@ -176,6 +179,7 @@ try {
     }
 
     LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
+    LimitAccessToInstance -rgName $RgName -instanceName $instanceNameCm -instanceRole "cm" -limitAccessToInstanceAsString $limitCmAccessInput -ipMaskCollectionUserInput $ipList;
     Write-Host "Deployment Complete.";
 }
 catch {

@@ -221,6 +221,25 @@
       "visibleRule": "limitAccesToRep = true"
     },
     {
+      "name": "limitAccesToCm",
+      "type": "boolean",
+      "label": "Limit access to CM role by IP",
+      "defaultValue": "false",
+      "required": false,
+      "groupName": "security",
+      "helpMarkDown": "Allows to limit access to content management role by setting IP whitelist."
+    },
+    {
+      "name": "cmInstanceName",
+      "type": "string",
+      "label": "CM instance name",
+      "defaultValue": "",
+      "required": false,
+      "groupName": "security",
+      "helpMarkDown": "If CM role slot name does not conform to rule 'resourceGroupName + -cm/cm-staging', please, specify it here.",
+      "visibleRule": "limitAccesToCm = true"
+    },
+    {
       "name": "ipMaskCollection",
       "type": "string",
       "label": "IP/Mask comma-separated collection",
@@ -228,7 +247,7 @@
       "required": false,
       "groupName": "security",
       "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP instance by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
-      "visibleRule": "limitAccesToRep = true"
+      "visibleRule": "limitAccesToRep = true || limitAccesToCm = true"
     }
   ],
   "instanceNameFormat": "Deploy Sitecore",

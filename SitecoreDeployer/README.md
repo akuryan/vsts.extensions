@@ -38,4 +38,6 @@ I shall note, that inputs are not validated strictly, so - it will try to write 
 
 ```Limit access to REP role by IP``` - if selected (true by default) it allows to define IP-based restriction (Sitecore recommends to allow only Azure IPs, but I narrow it here to outbound IPs of Azure Web apps in our resource group). If you are already deploying something to web app, and you do have ipRestriction set in your web.config - do not use this section, as it _could_ conflict with existing set of rules (for example, duplicate IP specified) or be completely ineffective, if ```<ipSecurity>``` section starts with ```<clear />``` statement (it is cleared then :) )
 
+```Limit access to CM role by IP``` - if selected (false by default) will allow all outgoing IPs of all web apps in current resource group to access CM instance. Also, will take input from ```IP/Mask comma-separated collection``` as well. Could be combined with ```<ipSecurity>``` section in your web.config - just do not forget to omit ```<clear />``` directive, then
+
 ```IP/Mask comma-separated collection``` - comma-separated collection of IP/Mask pairs to be set for REP instance access allow list.

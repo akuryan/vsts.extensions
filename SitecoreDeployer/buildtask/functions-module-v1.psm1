@@ -44,7 +44,13 @@ function TryGenerateSas {
 
     process {
         Write-Verbose "Starting TryGenerateSas"
-        $escapedUri = [uri]::EscapeUriString($maybeStorageUri)
+
+        if ($maybeStorageUri -match '%') {
+            #percent sign is not allowed in URL by itself, so, if it is present - this URI is escaped already
+            $escapedUri = $maybeStorageUri
+        } else {
+            $escapedUri = [uri]::EscapeUriString($maybeStorageUri)
+        }
 
         if ([string]::IsNullOrEmpty($escapedUri)) {
             Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL is empty"

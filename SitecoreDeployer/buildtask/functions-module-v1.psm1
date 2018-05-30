@@ -46,10 +46,13 @@ function TryGenerateSas {
         Write-Verbose "Starting TryGenerateSas"
 
         if ($maybeStorageUri -match '%') {
+            Write-Verbose "TryGenerateSas: $maybeStorageUri already escaped"
             #percent sign is not allowed in URL by itself, so, if it is present - this URI is escaped already
             $escapedUri = $maybeStorageUri
         } else {
+            Write-Verbose "TryGenerateSas: $maybeStorageUri not escaped"
             $escapedUri = [uri]::EscapeUriString($maybeStorageUri)
+            Write-Verbose "TryGenerateSas: $maybeStorageUri have been escaped to $escapedUri"
         }
 
         if ([string]::IsNullOrEmpty($escapedUri)) {

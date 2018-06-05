@@ -33,6 +33,16 @@ Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
 Initialize-Azure
 
 Import-Module $PSScriptRoot\functions-module-v1.psm1
+
+Write-Host "Validating Resource Group Name..."
+if(!($RgName -cmatch '^(?!.*--)[a-z0-9]{2}(|([a-z0-9\-]{0,37})[a-z0-9])$'))
+{
+    Write-Error "Name should only contain lowercase letters, digits or dashes,
+                 dash cannot be used in the first two or final character,
+                 it cannot contain consecutive dashes and is limited between 2 and 40 characters in length!"
+    Break;
+}
+
 #region Create Params Object
 # license file needs to be secure string and adding the params as a hashtable is the only way to do it
 $additionalParams = New-Object -TypeName Hashtable;

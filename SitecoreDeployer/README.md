@@ -28,6 +28,8 @@ Select your Azure subscription in which Sitecore resources shall be deployed in 
 
 ```License location``` - insert here you license.xml content / file path / link to license.xml file (if stored on storage account in same subscription and ```Generate SAS``` is set to ```True```, then it will be downloaded with freshly generated SAS)
 
+```Additional ARM parameters``` - allows to pass additional or override existing parameters to ARM templates. This string shall be passed in ```name=value``` format, several parameters shall be separated by line end symbol ```"`n"```. Example: ```sas=?st=2018-05-28&test=test `n url=test```. Use case for this: usage of nested templates, which requires that templates are being accessed only via HTTP(S) (Sitecore 9 deployments, for example): when storing templates at closed source control repository, not accessible from the wild Internet, you could push them to blob storage in folder with release number (achieving versioning), generate a link and pass it along with short living SAS to a task in parameters.
+
 ### Security section
 
 Allows to limit access to PRC and REP roles as advised at [Sitecore documentation](https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment). I suppose that CM instance IP-based limitation is set in web.config of application - so, it is not added in this extension.

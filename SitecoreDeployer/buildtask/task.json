@@ -183,6 +183,14 @@
       "visibleRule": "licenseLocation = filesystem"
     },
     {
+      "name": "additionalArmParams",
+      "type": "string",
+      "label": "Additional ARM parameters",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Put additional parameters to be passed/overridden in template parameters. This string shall be passed in 'name=value' format, several parameters shall be separated by line end symbol '`n'. Example: 'sas=?st=2018-05-28&test=test `n url=test'"
+    },
+    {
       "name": "limitAccesToPrc",
       "type": "boolean",
       "label": "Limit access to PRC role by IP",

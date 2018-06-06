@@ -124,7 +124,11 @@ foreach($key in $additionalParams.keys)
 
 if ($DeploymentType -eq "infra") {
     $additionalParams.Set_Item('deploymentId', $RgName);
-} else {
+}
+
+$licenseXmlKey = "licenseXml";
+#if our parameters contains licenseXml - we need to populate it with data (even if it is infra deployment)
+if ($additionalParams.ContainsKey($licenseXmlKey)) {
     #now, tricky part = get license.xml content
     if ($licenseLocation -ne "none") {
         #license file is not defined in template
@@ -152,7 +156,7 @@ if ($DeploymentType -eq "infra") {
             $licenseFileContent =  $wc.DownloadString($licenseUri)
         }
         #we shall update ARM template parameters only in case it is defined on VSTS level
-        $additionalParams.Set_Item('licenseXml', $licenseFileContent);
+        $additionalParams[$licenseXmlKey] = $licenseFileContent;
     }
 }
 

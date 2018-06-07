@@ -156,7 +156,7 @@ if ($additionalParams.ContainsKey($licenseXmlKey)) {
             $licenseFileContent =  $wc.DownloadString($licenseUri)
         }
         #we shall update ARM template parameters only in case it is defined on VSTS level
-        $additionalParams[$licenseXmlKey] = $licenseFileContent;
+        $additionalParams.Set_Item($licenseXmlKey, $licenseFileContent);
     }
 }
 
@@ -174,10 +174,10 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
             if ($additionalParams.ContainsKey($additionalKey)) {
                 $initialValue = $additionalParams[$additionalKey]
                 Write-Verbose "Overriding $additionalKey from $initialValue to $reportObject"
-                $additionalParams[$additionalKey] = $reportObject;
+                $additionalParams.Set_Item($additionalKey, $reportObject);
             } else {
                 Write-Verbose "Adding $additionalKey with value $reportObject"
-                $additionalParams[$additionalKey] = $reportObject;
+                $additionalParams.Add($additionalKey, $reportObject);
             }
         }
     } else {

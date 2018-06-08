@@ -310,3 +310,18 @@ function LimitAccessToInstance {
 
     SetWebAppRestrictions -userInputIpList $ipMaskCollectionUserInput -webAppInstanceName $instanceName -resourceGroupName $rgName
 }
+
+function ListArmParameters {
+    param (
+        $inputMessage,
+        $armParamatersHashTable
+    )
+
+    Write-Verbose "ListArmParameters: $inputMessage"
+    foreach($key in $armParamatersHashTable.keys)
+    {
+        $message = '{0} is {1}' -f $key, $armParamatersHashTable[$key]
+        Write-Verbose $message
+    }
+    Write-Verbose "ListArmParameters: ended"
+}

@@ -116,11 +116,7 @@ if ($limitPrcAccess -And !$ipSecuritySetInTemplateParams) {
 }
 
 Write-Verbose "Do we need to generate SAS? $GenerateSas"
-foreach($key in $additionalParams.keys)
-{
-    $message = '{0} is {1}' -f $key, $additionalParams[$key]
-    Write-Verbose $message
-}
+ListArmParameters -inputMessage "Listing keys before filling up by extension:" -armParamatersHashTable $additionalParams
 
 if ($DeploymentType -eq "infra") {
     $additionalParams.Set_Item('deploymentId', $RgName);
@@ -184,6 +180,8 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
         Write-Host "##vso[task.logissue type=warning;] additionalArmParams field does not contains = (equal) sign, so it could not be converted to hashtable"
     }
 }
+
+ListArmParameters -inputMessage "Listing keys AFTER filling up by extension:" -armParamatersHashTable $additionalParams
 
 #endregion
 

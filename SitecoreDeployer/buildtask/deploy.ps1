@@ -83,15 +83,20 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 		($params.$($p.Name).reference.keyVault) -and
 		($params.$($p.Name).reference.keyVault.id) -and
 		($params.$($p.Name).reference.secretName)){
-		$vaultName = Split-Path $params.$($p.Name).reference.keyVault.id -Leaf
+        $vaultName = Split-Path $params.$($p.Name).reference.keyVault.id -Leaf
         $secretName = $params.$($p.Name).reference.secretName
+
+        Write-Verbose "Trying to get secret $secretName from Azure keyvault $vaultName"
+
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
             #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
             $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText
-            Write-Debug "URI text is $secret"
+            Write-Verbose "URI text is $secret"
         } else {
             $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue
         }
+
+        Write-Verbose "Received secret $secretName from Azure keyvault $vaultName with value $secret"
 
 		$additionalParams.Add($p.Name, $secret);
 	} else {
@@ -162,7 +167,7 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
         #we can proceed only in case we have seems to be correct params
         $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams
         Write-Verbose "Additional ARM parameters parsed to hashtable:"
-        Write-Verbose "$additionalArmParamsHashtable"
+        Write-Verbose ($additionalArmParamsHashtable | Out-String)
 
         foreach ($additionalKey in $additionalArmParamsHashtable.Keys) {
             #check, if we have such keys in our $additionalParams object

@@ -165,7 +165,13 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
     #process additional params from release settings
     if ($additionalArmParams.contains('=')) {
         #we can proceed only in case we have seems to be correct params
-        $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams
+        if ($additionalArmParams.contains(' \n ')) {
+            #replace line end symbole with leading and traling space characters to powershell specific line ending character
+            $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams.Replace(" \n ", " `n ");
+        } else {
+            $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams;
+        }
+
         Write-Verbose "Additional ARM parameters parsed to hashtable:"
         Write-Verbose ($additionalArmParamsHashtable | Out-String)
 

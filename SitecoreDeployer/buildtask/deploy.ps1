@@ -213,9 +213,21 @@ try {
 
     Write-Verbose "Starting ARM deployment...";
 
+    #checking, if we are running at Debug build, e.g system.debug is set to TRUE
+    $isDebugBuild = $False;
+    try {
+        $isDebugBuild = [System.Convert]::ToBoolean($SYSTEM_DEBUG)
+    } catch [FormatException] {}
+    Write-Verbose "We are running debug build? $isDebugBuild"
+
     if ($DeploymentType -eq "infra") {
         $deploymentName = "sitecore-infra"
-        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
+        if ($isDebugBuild) {
+            #for debug build I wish more verbosity in output
+            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -DeploymentDebugLogLevel All -Debug -Verbose;
+        } else {
+            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
+        }
     } else {
         #deployment name is used to generate login to SQL as well - so for msdeploy and redeploy it shall be equal
         $deploymentName = "sitecore-msdeploy"
@@ -224,8 +236,12 @@ try {
         $sitecoreDeploymentOutput = $sitecoreDeployment.Outputs
         $sitecoreDeploymentOutputAsJson =  ConvertTo-Json $sitecoreDeploymentOutput -Depth 5
         $sitecoreDeploymentOutputAsHashTable = ConvertPSObjectToHashtable $(ConvertFrom-Json $sitecoreDeploymentOutputAsJson)
-
-        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
+        if ($isDebugBuild) {
+            #for debug build I wish more verbosity in output
+            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable -DeploymentDebugLogLevel All -Debug -Verbose;
+        } else {
+            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
+        }
     }
 
     LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;

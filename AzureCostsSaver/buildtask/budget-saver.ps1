@@ -179,29 +179,6 @@ function ProcessSqlDatabases {
                         Write-Verbose "We do not need to downscale db $resourceName at server $sqlServerName to S0 size"
                     }
                 }
-                #now we need to form up tags (tag have a limit of 256 chars per tag)
-                $stringLength = $dbNameSkuEditionInfoString.Length;
-                Write-Verbose "dbNameSkuEditionInfoString have lenght of $stringLength"
-                #how much tags we need to record our databases sizes
-                $tagsLimitCount = [Math]::ceiling( $stringLength/256)
-                Write-Verbose "We need $tagsLimitCount tags to write our db sizes"
-
-                #count how much tags we will have in the end
-                $resultingTagsCount = $sqlServerTags.Count + $tagsLimitCount
-
-                if ($resultingTagsCount -le 15) {
-                    #we could not have more than 15 tags per resource but this is OK and we can proceed
-                    for ($counter=0; $counter -lt $tagsLimitCount; $counter++){
-                        $key = $keySkuEdition + $counter;
-                        $value = ($dbNameSkuEditionInfoString.ToCharArray() | select -first 256) -join "";
-                        #remove extracted data
-                        $dbNameSkuEditionInfoString = $dbNameSkuEditionInfoString.Replace($value, "");
-                        $sqlServerTags[$key] = $value
-                    }
-                } else {
-                    Write-Host "##vso[task.logissue type=warning;] We could not save database sizes as tags, as we are over limit of 15 tags per resource on current sql server $sqlServerName. We need to write $resultingTagsCount in addition to existing tags"
-                    Write-Host "##vso[task.logissue type=warning;] Databases sizes as string: $dbNameSkuEditionInfoString"
-                }
             } else {
                 #count keys
                 $keyCounter = 0;
@@ -239,9 +216,34 @@ function ProcessSqlDatabases {
                 }
             }
         }
-        #Store tags on SQL server
-        Set-AzureRmResource -ResourceId $sqlServerResourceId -Tag $sqlServerTags -Force
-        (Get-AzureRmResource -ResourceId $sqlServerResourceId).Tags
+        if ($Downscale) {
+            #now we need to form up tags (tag have a limit of 256 chars per tag)
+            $stringLength = $dbNameSkuEditionInfoString.Length;
+            Write-Verbose "dbNameSkuEditionInfoString have lenght of $stringLength"
+            #how much tags we need to record our databases sizes
+            $tagsLimitCount = [Math]::ceiling( $stringLength/256)
+            Write-Verbose "We need $tagsLimitCount tags to write our db sizes"
+
+            #count how much tags we will have in the end
+            $resultingTagsCount = $sqlServerTags.Count + $tagsLimitCount
+
+            if ($resultingTagsCount -le 15) {
+                #we could not have more than 15 tags per resource but this is OK and we can proceed
+                for ($counter=0; $counter -lt $tagsLimitCount; $counter++){
+                    $key = $keySkuEdition + $counter;
+                    $value = ($dbNameSkuEditionInfoString.ToCharArray() | select -first 256) -join "";
+                    #remove extracted data
+                    $dbNameSkuEditionInfoString = $dbNameSkuEditionInfoString.Replace($value, "");
+                    $sqlServerTags[$key] = $value
+                }
+            } else {
+                Write-Host "##vso[task.logissue type=warning;] We could not save database sizes as tags, as we are over limit of 15 tags per resource on current sql server $sqlServerName. We need to write $resultingTagsCount in addition to existing tags"
+                Write-Host "##vso[task.logissue type=warning;] Databases sizes as string: $dbNameSkuEditionInfoString"
+            }
+            #Store tags on SQL server
+            Set-AzureRmResource -ResourceId $sqlServerResourceId -Tag $sqlServerTags -Force
+            (Get-AzureRmResource -ResourceId $sqlServerResourceId).Tags
+        }
     }
 }
 

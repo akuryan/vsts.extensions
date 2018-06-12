@@ -170,8 +170,9 @@ function ProcessSqlDatabases {
                     #proceed only in case we are not at S0
                     if ($sqlDb.CurrentServiceObjectiveName -ne "S0") {
                         #store it as dbName:sku-edition
-                        $dbNameSkuEditionInfoString += ("{0}:{1}-{2};" -f $resourceName, $sqlDb.CurrentServiceObjectiveName, $sqlDb.Edition );
-
+                        Write-Verbose "dbNameSkuEditionInfoString now is $dbNameSkuEditionInfoString";
+                        $dbNameSkuEditionInfoString = $dbNameSkuEditionInfoString + ("{0}:{1}-{2};" -f $resourceName, $sqlDb.CurrentServiceObjectiveName, $sqlDb.Edition );
+                        Write-Verbose "dbNameSkuEditionInfoString became now $dbNameSkuEditionInfoString";
                         Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size";
                         Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard;
                     } else {

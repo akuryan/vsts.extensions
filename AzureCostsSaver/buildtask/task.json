@@ -4,7 +4,7 @@
   "friendlyName": "Azure Costs Saver",
   "description": "Task finds and down/up- scales web apps, sql databases and (de)provisions VMs in resource group",
   "helpMarkDown": "Information on how to use the task: [See repository](https://github.com/akuryan/vsts.extensions/tree/master/AzureCostsSaver)  \n",
-  "category": "Utility",
+  "category": "Plan and Track",
   "visibility": [ "Build", "Release" ],
   "author": "Anton Kuryan",
   "version": {

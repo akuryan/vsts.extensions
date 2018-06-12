@@ -29,6 +29,7 @@
 		"default": "images/icons/icon-small.png",
 		"large": "images/icons/icon.png"
 	 },
+	"categories": ["Plan and track"],
 	"contributions": [
 		{
 			"id": "AzureCostsSaver",

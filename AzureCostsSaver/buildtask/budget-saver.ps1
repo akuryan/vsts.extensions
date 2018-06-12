@@ -162,7 +162,7 @@ function ProcessSqlDatabases {
             for ($counter=0; $counter -lt $keyCounter; $counter++){
                 $key = $keySkuEdition + $counter;
                 Write-Verbose "Retrieving $key from tags"
-                $dbNameSkuEditionInfoString += $sqlServerTags[$key];
+                $dbNameSkuEditionInfoString = $dbNameSkuEditionInfoString + $sqlServerTags[$key];
                 Write-Verbose "Retrieved so far: $dbNameSkuEditionInfoString";
             }
 
@@ -196,18 +196,20 @@ function ProcessSqlDatabases {
                         Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size";
                         Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard;
                     } else {
-                        Write-Verbose "We do not need to downscale db $resourceName at server $sqlServerName to S0 size"
+                        Write-Verbose "We do not need to downscale db $resourceName at server $sqlServerName to S0 size";
                     }
                 }
             } else {
                 $filterOn = ("{0}:*" -f $resourceName);
+                Write-Verbose "We are going to filter $dbNameSkuEditionInfoString with filter $filterOn";
                 $replaceString = ("{0}:" -f $resourceName);
                 #get DB size and edition
                 $skuEdition = ($databaseSizesSkuEditions -like $filterOn);
-
+                Write-Verbose "We've found sku and edition for $resourceName - it is $skuEdition";
                 #ugly, a lot of branching, but could not think of any way
                 if (![string]::IsNullOrWhiteSpace($skuEdition)) {
                     $skuEdition = $skuEdition.Replace($replaceString, "");
+                    Write-Verbose "We've replaced and final sku and edition is $skuEdition";
                     #we have SkuEdition defined for database, which means that it was not Basic or Standard S0 prior to downscaling
                     if ($skuEdition.Split('-').Count -eq 2)
                     {

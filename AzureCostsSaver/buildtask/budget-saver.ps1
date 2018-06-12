@@ -155,11 +155,12 @@ function ProcessSqlDatabases {
 
             $keySku = ("{0}-{1}" -f $resourceName, "sku");
             $keyEdition = ("{0}-{1}" -f $resourceName, "edition");
-            #there is a limit on 15 tags per resource on Azure, so I need to optimize amount of tags generated
-            $keySkuEdition = ("{0}-{1}"-f $resourceName, "SkuEdition");
             #removing possibly existing old tags
             $sqlServerTags.Remove($keySku);
             $sqlServerTags.Remove($keyEdition);
+            $keySkuEdition = "skuEdition";
+            #we will store all data in one string and then we will try to save it as tags to be parsed later
+            $dbNameSkuEditionInfoString = "";
 
             if ($Downscale) {
                 #proceed only in case we are not on Basic
@@ -167,26 +168,59 @@ function ProcessSqlDatabases {
                 {
                     #proceed only in case we are not at S0
                     if ($sqlDb.CurrentServiceObjectiveName.ToLower -ne "s0") {
+                        #store it as dbName:sku-edition
+                        $dbNameSkuEditionInfoString += ("{0}:{1}-{2};" -f $resourceName, $sqlDb.CurrentServiceObjectiveName, $sqlDb.Edition );
 
-                        if ($sqlServerTags.Count -le 14) {
-                            #we could not have more than 15 tags per resource, so, we could not continue only in case we have no more than 14 tags on our sql server now
-                            #write one tag per database, except 2 and only in case we need to downscale it
-                            $sqlServerTags[$keySkuEdition] = ("{0}-{1}" -f $sqlDb.CurrentServiceObjectiveName, $sqlDb.Edition);
-
-                            Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
-                            Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
-                        } else {
-                            Write-Host "##vso[task.logissue type=warning;] Could not downscale db $resourceName at server $sqlServerName to S0 size due to tags limit size - we already have 15 tags on SQL Server resource. Please, split up your databases between more sql servers"
-                        }
-
+                        Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size";
+                        Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard;
                     } else {
                         Write-Verbose "We do not need to downscale db $resourceName at server $sqlServerName to S0 size"
                     }
                 }
-            }
-            else {
+                #now we need to form up tags (tag have a limit of 256 chars per tag)
+                $stringLength = $dbNameSkuEditionInfoString.Length;
+                Write-Verbose "dbNameSkuEditionInfoString have lenght of $stringLength"
+                #how much tags we need to record our databases sizes
+                $tagsLimitCount = [Math]::ceiling( $stringLength/256)
+                Write-Verbose "We need $tagsLimitCount tags to write our db sizes"
+
+                #count how much tags we will have in the end
+                $resultingTagsCount = $sqlServerTags.Count + $tagsLimitCount
+
+                if ($resultingTagsCount -le 15) {
+                    #we could not have more than 15 tags per resource but this is OK and we can proceed
+                    for ($counter=0; $counter -lt $tagsLimitCount; $counter++){
+                        $key = $keySkuEdition + $counter;
+                        $value = ($dbNameSkuEditionInfoString.ToCharArray() | select -first 256) -join "";
+                        #remove extracted data
+                        $dbNameSkuEditionInfoString = $dbNameSkuEditionInfoString.Replace($value, "");
+                        $sqlServerTags[$key] = $value
+                    }
+                } else {
+                    Write-Host "##vso[task.logissue type=warning;] We could not save database sizes as tags, as we are over limit of 15 tags per resource on current sql server $sqlServerName. We need to write $resultingTagsCount in addition to existing tags"
+                    Write-Host "##vso[task.logissue type=warning;] Databases sizes as string: $dbNameSkuEditionInfoString"
+                }
+            } else {
+                #count keys
+                $keyCounter = 0;
+                foreach($key in $sqlServerTags.keys) {
+                    #get all keys starting with with skuEdition
+                    if ($key.Contains($keySkuEdition)){
+                        $keyCounter = $keyCounter+1;
+                    }
+                }
+                for ($counter=0; $counter -lt $keyCounter; $counter++){
+                    $key = $keySkuEdition + $counter;
+                    Write-Verbose "Retrieving $key from tags"
+                    $dbNameSkuEditionInfoString += $sqlServerTags[$key];
+                    Write-Verbose "Retrieved so far: $dbNameSkuEditionInfoString";
+                }
+
+                $databaseSizesSkuEditions = $dbNameSkuEditionInfoString.Split(';');
+                $filterOn = ("{0}:*" -f $resourceName);
+                $replaceString = ("{0}:" -f $resourceName);
                 #get DB size and edition
-                $skuEdition = $sqlServerTags[$keySkuEdition];
+                $skuEdition = ($databaseSizesSkuEditions -like $filterOn).Replace($replaceString, "");
 
                 #ugly, a lot of branching, but could not think of any way
                 if (![string]::IsNullOrWhiteSpace($skuEdition)) {

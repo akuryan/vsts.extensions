@@ -153,28 +153,53 @@ function ProcessSqlDatabases {
             Write-Host "Performing requested operation on $resourceName"
             $resourceId = $sqlDb.ResourceId
 
-            $keySku = ("{0}-{1}" -f $resourceName, "sku")
-            $keyEdition = ("{0}-{1}" -f $resourceName, "edition")
+            $keySku = ("{0}-{1}" -f $resourceName, "sku");
+            $keyEdition = ("{0}-{1}" -f $resourceName, "edition");
+            #there is a limit on 15 tags per resource on Azure, so I need to optimize amount of tags generated
+            $keySkuEdition = ("{0}-{1}"-f $resourceName, "SkuEdition");
+            #removing possibly existing old tags
+            $sqlServerTags.Remove($keySku);
+            $sqlServerTags.Remove($keyEdition);
 
             if ($Downscale) {
-
-                $sqlServerTags[$keySku] = $sqlDb.CurrentServiceObjectiveName
-                $sqlServerTags[$keyEdition] = $sqlDb.Edition
-
                 #proceed only in case we are not on Basic
                 if ($sqlDb.Edition -ne "Basic")
                 {
-                    Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
+                    #proceed only in case we are not at S0
+                    if ($sqlDb.CurrentServiceObjectiveName.ToLower -ne "s0") {
+
+                        if ($sqlServerTags.Count -le 14) {
+                            #we could not have more than 15 tags per resource, so, we could not continue only in case we have no more than 14 tags on our sql server now
+                            #write one tag per database, except 2 and only in case we need to downscale it
+                            $sqlServerTags[$keySkuEdition] = ("{0}-{1}" -f $sqlDb.CurrentServiceObjectiveName, $sqlDb.Edition);
+
+                            Write-Host "Downscaling $resourceName at server $sqlServerName to S0 size"
+                            Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName S0 -Edition Standard
+                        } else {
+                            Write-Host "##vso[task.logissue type=warning;] Could not downscale db $resourceName at server $sqlServerName to S0 size due to tags limit size - we already have 15 tags on SQL Server resource. Please, split up your databases between more sql servers"
+                        }
+
+                    } else {
+                        Write-Verbose "We do not need to downscale db $resourceName at server $sqlServerName to S0 size"
+                    }
                 }
             }
             else {
-                $edition = $sqlServerTags[$keyEdition]
-                $targetSize = $sqlServerTags[$keySku]
-                if ($edition -ne "Basic") {
+                #get DB size and edition
+                $skuEdition = $sqlServerTags[$keySkuEdition];
 
-                    Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
-                    Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $edition
+                #ugly, a lot of branching, but could not think of any way
+                if (![string]::IsNullOrWhiteSpace($skuEdition)) {
+                    #we have SkuEdition defined for database, which means that it was not Basic or Standard S0 prior to downscaling
+                    if ($skuEdition.Split('-').Count -eq 2)
+                    {
+                        #we have exactly 2 values in our tag and could proceed further
+                        $edition = $skuEdition.Split('-')[1];
+                        $targetSize = $skuEdition.Split('-')[0];
+                        #since we could not have tags about Basic and Standard S0 databases - we are going to proceed from here
+                        Write-Host "Upscaling $resourceName at server $sqlServerName to $targetSize size"
+                        Set-AzureRmSqlDatabase -DatabaseName $resourceName -ResourceGroupName $sqlDb.ResourceGroupName -ServerName $sqlServerName -RequestedServiceObjectiveName $targetSize -Edition $edition
+                    }
                 }
             }
         }

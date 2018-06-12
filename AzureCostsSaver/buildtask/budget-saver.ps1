@@ -146,6 +146,9 @@ function ProcessSqlDatabases {
             $sqlServerTags = @{}
         }
 
+        #we will store all data in one string and then we will try to save it as tags to be parsed later
+        $dbNameSkuEditionInfoString = "";
+
         foreach ($sqlDb in $sqlDatabases.where( {$_.DatabaseName -ne "master"}))
         {
             $resourceName = $sqlDb.DatabaseName
@@ -159,15 +162,13 @@ function ProcessSqlDatabases {
             $sqlServerTags.Remove($keySku);
             $sqlServerTags.Remove($keyEdition);
             $keySkuEdition = "skuEdition";
-            #we will store all data in one string and then we will try to save it as tags to be parsed later
-            $dbNameSkuEditionInfoString = "";
 
             if ($Downscale) {
                 #proceed only in case we are not on Basic
                 if ($sqlDb.Edition -ne "Basic")
                 {
                     #proceed only in case we are not at S0
-                    if ($sqlDb.CurrentServiceObjectiveName.ToLower -ne "s0") {
+                    if ($sqlDb.CurrentServiceObjectiveName -ne "S0") {
                         #store it as dbName:sku-edition
                         $dbNameSkuEditionInfoString += ("{0}:{1}-{2};" -f $resourceName, $sqlDb.CurrentServiceObjectiveName, $sqlDb.Edition );
 

@@ -1,7 +1,13 @@
 $ResourceGroupName = Get-VstsInput -Name resourceGroupName -Require
 $downScaleInput = Get-VstsInput -Name downscaleSelector -Require
 Write-Verbose "In input downscaleInput we have $downScaleInput"
-$Downscale = [System.Convert]::ToBoolean($downScaleInput);
+if ($downScaleInput.ToLower() -eq "yes" -or $downScaleInput.ToLower() -eq "true") {
+    #do not know why, but sometimes tasks get wrong input from pipeline
+    $Downscale = $true;
+} else {
+    $Downscale = $false;
+}
+
 Write-Host "We are going to downscale? $Downscale"
 Write-Host "Resources will be selected from $ResourceGroupName resource group"
 

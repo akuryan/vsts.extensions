@@ -149,6 +149,26 @@ function ProcessSqlDatabases {
         #we will store all data in one string and then we will try to save it as tags to be parsed later
         $dbNameSkuEditionInfoString = "";
 
+        if (!$Downscale) {
+            #count keys
+            $keyCounter = 0;
+            foreach($key in $sqlServerTags.keys) {
+                #get all keys starting with with skuEdition
+                if ($key.Contains($keySkuEdition)){
+                    $keyCounter = $keyCounter+1;
+                }
+            }
+            Write-Verbose "We've found $keyCounter keys with database sizes"
+            for ($counter=0; $counter -lt $keyCounter; $counter++){
+                $key = $keySkuEdition + $counter;
+                Write-Verbose "Retrieving $key from tags"
+                $dbNameSkuEditionInfoString += $sqlServerTags[$key];
+                Write-Verbose "Retrieved so far: $dbNameSkuEditionInfoString";
+            }
+
+            $databaseSizesSkuEditions = $dbNameSkuEditionInfoString.Split(';');
+        }
+
         foreach ($sqlDb in $sqlDatabases.where( {$_.DatabaseName -ne "master"}))
         {
             $resourceName = $sqlDb.DatabaseName
@@ -180,29 +200,14 @@ function ProcessSqlDatabases {
                     }
                 }
             } else {
-                #count keys
-                $keyCounter = 0;
-                foreach($key in $sqlServerTags.keys) {
-                    #get all keys starting with with skuEdition
-                    if ($key.Contains($keySkuEdition)){
-                        $keyCounter = $keyCounter+1;
-                    }
-                }
-                for ($counter=0; $counter -lt $keyCounter; $counter++){
-                    $key = $keySkuEdition + $counter;
-                    Write-Verbose "Retrieving $key from tags"
-                    $dbNameSkuEditionInfoString += $sqlServerTags[$key];
-                    Write-Verbose "Retrieved so far: $dbNameSkuEditionInfoString";
-                }
-
-                $databaseSizesSkuEditions = $dbNameSkuEditionInfoString.Split(';');
                 $filterOn = ("{0}:*" -f $resourceName);
                 $replaceString = ("{0}:" -f $resourceName);
                 #get DB size and edition
-                $skuEdition = ($databaseSizesSkuEditions -like $filterOn).Replace($replaceString, "");
+                $skuEdition = ($databaseSizesSkuEditions -like $filterOn);
 
                 #ugly, a lot of branching, but could not think of any way
                 if (![string]::IsNullOrWhiteSpace($skuEdition)) {
+                    $skuEdition = $skuEdition.Replace($replaceString, "");
                     #we have SkuEdition defined for database, which means that it was not Basic or Standard S0 prior to downscaling
                     if ($skuEdition.Split('-').Count -eq 2)
                     {

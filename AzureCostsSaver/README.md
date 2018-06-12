@@ -22,3 +22,15 @@ Downscale Azure resources for Testing and Acceptance environments during nights 
 ### Details
 
 Please, read [post](https://colours.nl/azure-costs-saver) detailing usage and possible use cases as well.
+
+# Changes history
+
+## Version 0
+
+SQL database sizes are stored as 2 tags on SQL server resource
+
+## Version 1
+
+Azure imposes limitation on amount of tags per resource - 15 tags. To overcome this, sql database sizes are written as a string value, which is split to 256 chars per tag (each tag could not have more than 256 characters in value) and written to sql database server resource. On upscaling, this tags are read and size is reconstructed.
+
+This solution was required for Sitecore 9, which deploys 14 database

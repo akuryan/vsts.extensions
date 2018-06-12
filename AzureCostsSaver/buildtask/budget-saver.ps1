@@ -148,7 +148,7 @@ function ProcessSqlDatabases {
 
         #we will store all data in one string and then we will try to save it as tags to be parsed later
         $dbNameSkuEditionInfoString = "";
-
+        $keySkuEdition = "skuEdition";
         if (!$Downscale) {
             #count keys
             $keyCounter = 0;
@@ -181,7 +181,6 @@ function ProcessSqlDatabases {
             #removing possibly existing old tags
             $sqlServerTags.Remove($keySku);
             $sqlServerTags.Remove($keyEdition);
-            $keySkuEdition = "skuEdition";
 
             if ($Downscale) {
                 #proceed only in case we are not on Basic

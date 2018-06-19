@@ -221,7 +221,9 @@ function SetWebAppRestrictions {
     }
 
     #get API version to work with Azure Web apps
-    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    #$APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    #in latest APIVerions (2018-02-01) - something changed on setting web app IP restrictions, so, I will use the last, where this code executes OK
+    $APIVersion = "2016-08-01";
     #by default, we are supposing we are working with slots
     $isSlot = $false
     #if instance name does not contain / - it is not a slot :)

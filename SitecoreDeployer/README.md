@@ -30,6 +30,18 @@ Select your Azure subscription in which Sitecore resources shall be deployed in 
 
 ```Additional ARM parameters``` - allows to pass additional or override existing parameters to ARM templates. This string shall be passed in ```name=value``` format, several parameters shall be separated by line end symbol ``` \n ```(do not forget about space symbol before and after). Example: ```sas=?st=2018-05-28&test=test \n url=test```. Use case for this: usage of nested templates, which requires that templates are being accessed only via HTTP(S) (Sitecore 9 deployments, for example): when storing templates at closed source control repository, not accessible from the wild Internet, you could push them to blob storage in folder with release number (achieving versioning), generate a link and pass it along with short living SAS to a task in parameters.
 
+### Nested templates
+
+Since nested templates requires that templates are residing on URI, accessible to build machine at deployment time for reading - one will need to upload them on storage account and use ```Additional ARM parameters``` field. This use case was raised in [issue #2](https://github.com/akuryan/vsts.extensions/issues/2). For now, this could be fixed in following way:
+
+- Add one more task to my release: ```Azure File Copy``` before Sitecore deployer to upload templates to Azure Storage container. This task will upload templates to Azure Storage container in blob folder, which could be defined in variable ```$(blobPrefix)``` (```blobPrefix``` is equal to ```$(Release.ReleaseId)/$(Release.EnvironmentName)``` which allows to have separate templates for separate environments and releases). Task will output SAS and Storage container URI in variables ```storageUri``` and ```storageSas```
+![1](https://user-images.githubusercontent.com/1794306/42159309-fb8a288e-7dfb-11e8-9e69-ce298ef238db.png)
+
+- In Sitecore Deploy task in field ```Additional ARM parameters``` define following string ```templateLinkBase=$(storageUri)/$(blobPrefix)/ \n templateLinkAccessToken=$(storageSas)```
+This allows to inject URL for storage account and it's SAS, so, template starts deploying from local disk, but will get nested templates from Azure Storage account (actually, this is ARM limitation: you could not use nested templates from local disk - they shall be always located on URI, **accessible to host, which is executing script**, _hence, this upload to Azure Storage task addition_)
+
+Actually, if you are not modifying nested templates (mine modifications included HTTP/2, TLS 1.2 and some other stuff, required for our application work) - you can change templateLinkBase variable to GitHub URL, pointing it to Sitecore Azure QuickStart templates
+
 ### Security section
 
 Allows to limit access to PRC and REP roles as advised at [Sitecore documentation](https://doc.sitecore.net/sitecore_experience_platform/setting_up_and_maintaining/sitecore_on_azure/analytics/securing_microsoft_azure_resources_for_a_sitecore_deployment). I suppose that CM instance IP-based limitation is set in web.config of application - so, it is not added in this extension.

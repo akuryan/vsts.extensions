@@ -174,15 +174,28 @@ function CollectOutBoundIpAddresses {
         return $collectedIps;
     }
 
-    $APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
     foreach ($webApp in $webApps) {
-        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webApp.Name -ResourceGroupName $ResourceGroupName -ApiVersion $APIVersion)
-        foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
-            $valueToAdd = $ip + "/255.255.255.255,";
-            $collectedIps += $valueToAdd;
-        }
+        $collectedIps += CollectWebAppOutboundIpAddresses -resourceGroupName $ResourceGroupName -webAppName $webApp.Name
     }
     return $collectedIps.TrimEnd(',');
+}
+
+#get outbound IP addresses for 1 web app
+function CollectWebAppOutboundIpAddresses{
+    param (
+        $resourceGroupName,
+        $webAppName
+        )
+
+    $webAppOutboundIPs = ""
+    #$APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
+    $APIVersion = "2018-02-01"
+    $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webAppName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+    foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
+        $valueToAdd = $ip + "/255.255.255.255,";
+        $webAppOutboundIPs += $valueToAdd;
+    }
+    return $webAppOutboundIPs.TrimEnd(',');
 }
 
 function SetWebAppRestrictions {
@@ -291,18 +304,28 @@ function LimitAccessToInstance {
     Write-Verbose "$instanceRole instance name is $instanceName"
 
     Write-Verbose "Defined by user ip collection is $ipMaskCollectionUserInput"
+    #if provided reporting IP list is not emptry and not ends with comma - we shall add comma to the end  here
+    if (![string]::IsNullOrWhiteSpace($ipMaskCollectionUserInput)) {
+        if ($ipMaskCollectionUserInput -notmatch '.+?,$') {
+            $ipMaskCollectionUserInput += ','
+        }
+    }
     #reporting instance shall be accessible by all other instances as well
     if ($instanceRole -eq "rep" -Or $instanceRole -eq "cm") {
         Write-Verbose "Collecting outbound IPs for $instanceRole role"
         #collect outbount IP addresses
         $collectedOutBoundIps = CollectOutBoundIpAddresses -resourceGroupName $rgName
         if (![string]::IsNullOrWhiteSpace($collectedOutBoundIps)) {
-            #if provided reporting IP list is not emptry and not ends with comma - we shall add comma to the end  here
-            if (![string]::IsNullOrWhiteSpace($ipMaskCollectionUserInput)) {
-                if ($ipMaskCollectionUserInput -notmatch '.+?,$') {
-                    $ipMaskCollectionUserInput += ','
-                }
-            }
+            #add outbound IPs to provided by user input if any
+            $ipMaskCollectionUserInput += $collectedOutBoundIps
+        }
+    }
+
+    #processing shall be able to reach itself on outbount IPs
+    if ($instanceRole -eq "prc") {
+        Write-Verbose "Collecting outbound IPs for $instanceRole role"
+        $collectedOutBoundIps = CollectWebAppOutboundIpAddresses -resourceGroupName $rgName -webAppName $instanceName
+        if (![string]::IsNullOrWhiteSpace($collectedOutBoundIps)) {
             #add outbound IPs to provided by user input if any
             $ipMaskCollectionUserInput += $collectedOutBoundIps
         }

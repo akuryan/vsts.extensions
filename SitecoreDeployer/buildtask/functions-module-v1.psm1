@@ -195,7 +195,7 @@ function CollectWebAppOutboundIpAddresses{
         $valueToAdd = $ip + "/255.255.255.255,";
         $webAppOutboundIPs += $valueToAdd;
     }
-    return $webAppOutboundIPs.TrimEnd(',');
+    return $webAppOutboundIPs;
 }
 
 function SetWebAppRestrictions {
@@ -219,7 +219,7 @@ function SetWebAppRestrictions {
     else {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Defining IP list (defined by user + collected outbound IP for $webAppInstanceName instance)"
         #split on comma
-        foreach ($inputIpMask in $userInputIpList.Split(',')) {
+        foreach ($inputIpMask in $userInputIpList.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
             $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
             $mask = ($inputIpMask.Split('/'))[1].ToString().Trim()
             if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {

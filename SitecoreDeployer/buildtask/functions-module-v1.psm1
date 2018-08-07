@@ -175,7 +175,7 @@ function CollectOutBoundIpAddresses {
     }
 
     foreach ($webApp in $webApps) {
-        $collectedIps += CollectWebAppOutboundIpAddresses -resourceGroupName $ResourceGroupName -webAppName $webApp.Name
+        $collectedIps += CollectWebAppOutboundIpAddresses -resourceGroupName $ResourceGroupName -webAppName $webApp.Name -resourcePresenceChecked $true
     }
     return $collectedIps.TrimEnd(',');
 }
@@ -184,12 +184,25 @@ function CollectOutBoundIpAddresses {
 function CollectWebAppOutboundIpAddresses{
     param (
         $resourceGroupName,
-        $webAppName
+        $webAppName,
+        #flag to check presence of resource in Azure
+        $resourcePresenceChecked = $false
         )
 
     $webAppOutboundIPs = ""
     #$APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
     $APIVersion = "2018-02-01"
+
+    if (!$resourcePresenceChecked) {
+        #get all resrouces in current resource group, and check if resource is present there
+        $webAppResource = (Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName).where({$_.Name -eq "$webAppName" -And $_.ResourceGroupName -eq "$resourceGroupName"})
+        #measure found amount and if less or equal to 0 - we could not find web app
+        if (($webAppResource | Measure-Object).Count -le 0) {
+            Write-Host "##vso[task.logissue type=warning;] CollectWebAppOutboundIpAddresses: Could not find web app $webAppName in resource group $resourceGroupName. Returning back"
+            return;
+        }
+    }
+
     $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webAppName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
     foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
         $valueToAdd = $ip + "/255.255.255.255,";

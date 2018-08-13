@@ -29,7 +29,7 @@
 		"default": "images/icons/icon-small.png",
 		"large": "images/icons/icon.png"
 	 },
-	"categories": ["Plan and track"],
+	"categories": ["Build and release"],
 	"contributions": [
 		{
 			"id": "AzureCostsSaver",

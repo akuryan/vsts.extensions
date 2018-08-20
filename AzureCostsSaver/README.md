@@ -7,6 +7,10 @@ If you select to downscale your resources (running at evening) - it will find al
 
 SQL databases sizes tags are stored on SQL server resource, as they tend to dissappear on SQL database resource.
 
+## Script location
+
+To improve reusability, script itself have been moved to Nuget - [package CostsSaver-Azure.PowerShell](https://www.nuget.org/packages/CostsSaver-Azure.PowerShell/); sources could be reviewed at other [repository](https://github.com/akuryan/Powershell.Modules/blob/master/src/Azure/BudgetSaver/tools/azure-costs-saver.psm1)
+
 ## Issues
 
 1. Script will silently fail if you try to run upscaling before downscaling
@@ -34,3 +38,21 @@ SQL database sizes are stored as 2 tags on SQL server resource
 Azure imposes limitation on amount of tags per resource - 15 tags. To overcome this, sql database sizes are written as a string value, which is split to 256 chars per tag (each tag could not have more than 256 characters in value) and written to sql database server resource. On upscaling, this tags are read and size is reconstructed.
 
 This solution was required for Sitecore 9, which deploys 14 database
+
+## Manual package preparation
+
+Install [nuget package CostsSaver-Azure.PowerShell](https://www.nuget.org/packages/CostsSaver-Azure.PowerShell/) in temp directory. Then copy psm1 files from ```tools``` folder of installed package to ```ps_modules\CostsSaver-Azure.PowerShell\```
+Then, you'll be able to compile installable package for VSTS/TFS
+
+```cmd
+rem Remove all possible installations of previous module versions (if any)
+for /D %f in ("%temp%\CostsSaver-Azure.PowerShell*") do rmdir %f /s /q
+rem Install module from nuget
+nuget install CostsSaver-Azure.PowerShell -OutputDirectory %Temp%
+pushd %temp%\CostsSaver-Azure.PowerShell*
+rem Create directory for module
+mkdir yourPathHere\ps_modules\buildtask\CostsSaver-Azure.PowerShell\
+rem Copy module to directory
+xcopy tools\azure-costs-saver.psm1 yourPathHere\ps_modules\buildtask\CostsSaver-Azure.PowerShell\ /F /S /Q /Y
+popd
+```

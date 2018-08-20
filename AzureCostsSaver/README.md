@@ -45,9 +45,14 @@ Install [nuget package CostsSaver-Azure.PowerShell](https://www.nuget.org/packag
 Then, you'll be able to compile installable package for VSTS/TFS
 
 ```cmd
+rem Remove all possible installations of previous module versions (if any)
 for /D %f in ("%temp%\CostsSaver-Azure.PowerShell*") do rmdir %f /s /q
+rem Install module from nuget
 nuget install CostsSaver-Azure.PowerShell -OutputDirectory %Temp%
 pushd %temp%\CostsSaver-Azure.PowerShell*
-xcopy tools\azure-costs-saver.psm1 yourPathHere\Powershell.Modules\src\Azure\BudgetSaver\tools\ /F /S /Q /Y
+rem Create directory for module
+mkdir yourPathHere\ps_modules\buildtask\CostsSaver-Azure.PowerShell\
+rem Copy module to directory
+xcopy tools\azure-costs-saver.psm1 yourPathHere\ps_modules\buildtask\CostsSaver-Azure.PowerShell\ /F /S /Q /Y
 popd
 ```

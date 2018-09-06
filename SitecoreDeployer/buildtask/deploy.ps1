@@ -123,8 +123,22 @@ if ($limitPrcAccess -And !$ipSecuritySetInTemplateParams) {
 Write-Verbose "Do we need to generate SAS? $GenerateSas"
 ListArmParameters -inputMessage "Listing keys before filling up by extension:" -armParamatersHashTable $additionalParams
 
+$deploymentIdkey = "deploymentId";
+
 if ($DeploymentType -eq "infra") {
-    $additionalParams.Set_Item('deploymentId', $RgName);
+    #first - check, if there is such a key - who knows, maybe future versions of templates or your adopted templates does not use it
+    if ($additionalParams.ContainsKey($deploymentIdkey)) {
+        Write-Verbose "There is a parameter $deploymentIdkey defined"
+        #if deploymentId key is set in parameters - we shall not override it
+        if ([string]::IsNullOrWhiteSpace($additionalParams[$deploymentIdkey])) {
+            Write-Verbose "$deploymentIdkey is empty, setting it to $RgName"
+            $additionalParams.Set_Item($deploymentIdkey, $RgName);
+        } else {
+            Write-Verbose "$deploymentIdkey is set in template"
+        } else {
+            Write-Verbose "$$deploymentIdkey is not defined in parameter file"
+        }
+    }
 }
 
 $licenseXmlKey = "licenseXml";

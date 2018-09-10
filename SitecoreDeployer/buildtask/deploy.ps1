@@ -135,9 +135,9 @@ if ($DeploymentType -eq "infra") {
             $additionalParams.Set_Item($deploymentIdkey, $RgName);
         } else {
             Write-Verbose "$deploymentIdkey is set in template"
-        } else {
-            Write-Verbose "$$deploymentIdkey is not defined in parameter file"
         }
+    } else {
+        Write-Verbose "$$deploymentIdkey is not defined in parameter file"
     }
 }
 

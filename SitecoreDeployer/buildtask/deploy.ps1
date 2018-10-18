@@ -225,7 +225,7 @@ try {
         New-AzureRmResourceGroup -Name $RgName -Location $location;
     }
 
-    Write-Verbose "Starting ARM deployment...";
+    Write-Host "Starting ARM deployment...";
 
     #checking, if we are running at Debug build, e.g system.debug is set to TRUE
     $isDebugBuild = $False;

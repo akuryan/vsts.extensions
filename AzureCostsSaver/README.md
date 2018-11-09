@@ -19,6 +19,8 @@ To improve reusability, script itself have been moved to Nuget - [package CostsS
 
 1. There is no way for web apps to be downscaled to Basic, as at this point of time I could not check, if there is a staging slot on web app present (Basic does not allow slots at all)
 
+1. You shall be executing at VS2017 Hosted pool, if your web apps are running on PremiumV2 tier.
+
 ## Use case
 
 Downscale Azure resources for Testing and Acceptance environments during nights and weekends to save on costs.

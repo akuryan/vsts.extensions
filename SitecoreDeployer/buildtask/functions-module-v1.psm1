@@ -161,7 +161,7 @@ function CollectOutBoundIpAddresses {
 
     $collectedIps = "";
     #Get all resources, which are in resource groups, which contains our name
-    $resources = Get-AzureRmResource -ResourceGroupName *$resourceGroupName*
+    $resources = Get-AzureRmResource -ResourceGroupName $resourceGroupName
     $resourcesAmount = ($resources | Measure-Object).Count
     if ($resourcesAmount -le 0) {
         Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any resources in given resource group"
@@ -195,7 +195,7 @@ function CollectWebAppOutboundIpAddresses{
 
     if (!$resourcePresenceChecked) {
         #get all resrouces in current resource group, and check if resource is present there
-        $webAppResource = (Get-AzureRmResource -ResourceGroupName *$resourceGroupName*).where({$_.Name -eq "$webAppName" -And $_.ResourceGroupName -eq "$resourceGroupName"})
+        $webAppResource = (Get-AzureRmResource -ResourceGroupName $resourceGroupName).where({$_.Name -eq "$webAppName" -And $_.ResourceGroupName -eq "$resourceGroupName"})
         #measure found amount and if less or equal to 0 - we could not find web app
         if (($webAppResource | Measure-Object).Count -le 0) {
             Write-Host "##vso[task.logissue type=warning;] CollectWebAppOutboundIpAddresses: Could not find web app $webAppName in resource group $resourceGroupName. Returning back"
@@ -203,7 +203,7 @@ function CollectWebAppOutboundIpAddresses{
         }
     }
 
-    $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -Name $webAppName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+    $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webAppName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
     foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
         $valueToAdd = $ip + "/255.255.255.255,";
         $webAppOutboundIPs += $valueToAdd;
@@ -258,7 +258,7 @@ function SetWebAppRestrictions {
     }
 
     #get all resrouces in current resource group, and check if resource is present there
-    $webAppResource = (Get-AzureRmResource -ResourceGroupName *$resourceGroupName*).where({$_.Name -eq "$webAppInstanceName" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+    $webAppResource = (Get-AzureRmResource -ResourceGroupName $resourceGroupName).where({$_.Name -eq "$webAppInstanceName" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
     #measure found amount and if less or equal to 0 - we could not find web app
     if (($webAppResource | Measure-Object).Count -le 0) {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Could not find web app $webAppInstanceName in resource group $ResourceGroupName. Returning back"
@@ -267,10 +267,10 @@ function SetWebAppRestrictions {
     #get current web app config
     if ($isSlot) {
         Write-Verbose "We are working with slot"
-        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/slots/config -Name $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/slots/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
     } else {
         Write-Verbose "We are working with web app"
-        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/config -Name $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
+        $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/config -ResourceName $webAppInstanceName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
     }
 
     Write-Verbose "Web app configuration received:"

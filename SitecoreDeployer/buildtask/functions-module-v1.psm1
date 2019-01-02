@@ -161,7 +161,7 @@ function CollectOutBoundIpAddresses {
 
     $collectedIps = "";
     #Get all resources, which are in resource groups, which contains our name
-    $resources = Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName
+    $resources = Get-AzureRmResource -ResourceGroupName $resourceGroupName
     $resourcesAmount = ($resources | Measure-Object).Count
     if ($resourcesAmount -le 0) {
         Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any resources in given resource group"
@@ -195,7 +195,7 @@ function CollectWebAppOutboundIpAddresses{
 
     if (!$resourcePresenceChecked) {
         #get all resrouces in current resource group, and check if resource is present there
-        $webAppResource = (Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName).where({$_.Name -eq "$webAppName" -And $_.ResourceGroupName -eq "$resourceGroupName"})
+        $webAppResource = (Get-AzureRmResource -ResourceGroupName $resourceGroupName).where({$_.Name -eq "$webAppName" -And $_.ResourceGroupName -eq "$resourceGroupName"})
         #measure found amount and if less or equal to 0 - we could not find web app
         if (($webAppResource | Measure-Object).Count -le 0) {
             Write-Host "##vso[task.logissue type=warning;] CollectWebAppOutboundIpAddresses: Could not find web app $webAppName in resource group $resourceGroupName. Returning back"
@@ -258,7 +258,7 @@ function SetWebAppRestrictions {
     }
 
     #get all resrouces in current resource group, and check if resource is present there
-    $webAppResource = (Find-AzureRmResource -ResourceGroupNameContains $resourceGroupName).where({$_.Name -eq "$webAppInstanceName" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
+    $webAppResource = (Get-AzureRmResource -ResourceGroupName $resourceGroupName).where({$_.Name -eq "$webAppInstanceName" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
     #measure found amount and if less or equal to 0 - we could not find web app
     if (($webAppResource | Measure-Object).Count -le 0) {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Could not find web app $webAppInstanceName in resource group $ResourceGroupName. Returning back"

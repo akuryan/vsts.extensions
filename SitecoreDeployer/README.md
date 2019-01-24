@@ -30,6 +30,29 @@ Select your Azure subscription in which Sitecore resources shall be deployed in 
 
 ```Additional ARM parameters``` - allows to pass additional or override existing parameters to ARM templates. This string shall be passed in ```name=value``` format, several parameters shall be separated by line end symbol ``` \n ```(do not forget about space symbol before and after). Example: ```sas=?st=2018-05-28&test=test \n url=test```. Use case for this: usage of nested templates, which requires that templates are being accessed only via HTTP(S) (Sitecore 9 deployments, for example): when storing templates at closed source control repository, not accessible from the wild Internet, you could push them to blob storage in folder with release number (achieving versioning), generate a link and pass it along with short living SAS to a task in parameters.
 
+### Template parameters at KeyVault
+
+If you wish too - you can store template parameters sensitive values in Azure KeyVault - this allows better security and (if you wish too) shared responsibilities: developers do not necessary need to know Sitecore admin password, for example... To reach this, one shall replace regular parameter definition, which looks like this:
+
+```
+  "sqlServerPassword": {"value": "someValueHere"}
+```
+
+with Azure KeyVault reference:
+
+```
+  "sqlServerPassword": {
+    "reference": {
+      "keyVault": {
+          "id":"KeyVaultNameHere"
+      },
+      "secretName": "secretNameHere"
+    }
+  }
+```
+
+Do not forget that your build server user (or service principle) have to be able to get secrets from Azure KeyVault.
+
 ### Nested templates
 
 Since nested templates requires that templates are residing on URI, accessible to build machine at deployment time for reading - one will need to upload them on storage account and use ```Additional ARM parameters``` field. This use case was raised in [issue #2](https://github.com/akuryan/vsts.extensions/issues/2). For now, this could be fixed in following way:

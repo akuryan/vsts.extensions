@@ -176,6 +176,7 @@ if ($additionalParams.ContainsKey($licenseXmlKey)) {
 }
 
 if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
+    $additionalArmParamsHashtable = @{};
     #process additional params from release settings
     if ($additionalArmParams.contains('=')) {
         #we can proceed only in case we have seems to be correct params
@@ -185,24 +186,29 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
         } else {
             $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams;
         }
-
-        Write-Verbose "Additional ARM parameters parsed to hashtable:"
-        Write-Verbose ($additionalArmParamsHashtable | Out-String)
-
-        foreach ($additionalKey in $additionalArmParamsHashtable.Keys) {
-            #check, if we have such keys in our $additionalParams object
-            $reportObject = $additionalArmParamsHashtable[$additionalKey];
-            if ($additionalParams.ContainsKey($additionalKey)) {
-                $initialValue = $additionalParams[$additionalKey]
-                Write-Verbose "Overriding $additionalKey from $initialValue to $reportObject"
-                $additionalParams.Set_Item($additionalKey, $reportObject);
-            } else {
-                Write-Verbose "Adding $additionalKey with value $reportObject"
-                $additionalParams.Add($additionalKey, $reportObject);
-            }
-        }
+    } elseif ($additionalArmParams.StartsWith("-")) {
+        $overridingDataArray = $additionalArmParams.Split("-",[System.StringSplitOptions]::RemoveEmptyEntries);
+        for ( $i = 0; $i -le $overridingDataArray.Length; $i ++ ) {
+            $additionalArmParamsHashtable.Add($overridingDataArray[$i].Split(" ")[0], $overridingDataArray[$i].Split(" ")[1]);
+          }
     } else {
         Write-Host "##vso[task.logissue type=warning;] additionalArmParams field does not contains = (equal) sign, so it could not be converted to hashtable"
+    }
+
+    Write-Verbose "Additional ARM parameters parsed to hashtable:"
+    Write-Verbose ($additionalArmParamsHashtable | Out-String)
+
+    foreach ($additionalKey in $additionalArmParamsHashtable.Keys) {
+        #check, if we have such keys in our $additionalParams object
+        $reportObject = $additionalArmParamsHashtable[$additionalKey];
+        if ($additionalParams.ContainsKey($additionalKey)) {
+            $initialValue = $additionalParams[$additionalKey]
+            Write-Verbose "Overriding $additionalKey from $initialValue to $reportObject"
+            $additionalParams.Set_Item($additionalKey, $reportObject);
+        } else {
+            Write-Verbose "Adding $additionalKey with value $reportObject"
+            $additionalParams.Add($additionalKey, $reportObject);
+        }
     }
 }
 

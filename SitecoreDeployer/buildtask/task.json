@@ -188,7 +188,10 @@
       "label": "Additional ARM parameters",
       "defaultValue": "",
       "required": false,
-      "helpMarkDown": "Put additional parameters to be passed/overridden in template parameters. This string shall be passed in 'name=value' format, several parameters shall be separated by line end symbol '\n' (do not forget about space symbol before and after). Example: 'sas=?st=2018-05-28&test=test \n url=test'"
+      "helpMarkDown": "Put additional parameters to be passed/overridden in template parameters. Settings following the syntax -key value. Value containing spaces should be enclosed in double quotes.<br /> Example : -phpVersion 5.6 -linuxFxVersion: node|6.11. Please, do not specify same values twice, as this will lead to an error",
+      "properties": {
+        "editorExtension": "ms.vss-services-azure.parameters-grid"
+      }
     },
     {
       "name": "limitAccesToPrc",

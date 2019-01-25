@@ -178,7 +178,7 @@ if ($additionalParams.ContainsKey($licenseXmlKey)) {
 if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
     $additionalArmParamsHashtable = @{};
     #process additional params from release settings
-    if ($additionalArmParams.contains('=')) {
+    if ($additionalArmParams.contains('=') -and (-not $additionalArmParams.StartsWith("-"))) {
         #we can proceed only in case we have seems to be correct params
         if ($additionalArmParams.contains(' \n ')) {
             #replace line end symbole with leading and traling space characters to powershell specific line ending character
@@ -187,12 +187,12 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
             $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams;
         }
     } elseif ($additionalArmParams.StartsWith("-")) {
-        $overridingDataArray = $additionalArmParams.Split("-",[System.StringSplitOptions]::RemoveEmptyEntries);
-        for ( $i = 0; $i -le $overridingDataArray.Length; $i ++ ) {
-            $additionalArmParamsHashtable.Add($overridingDataArray[$i].Split(" ")[0], $overridingDataArray[$i].Split(" ")[1]);
+        $overridingDataArray = $additionalArmParams.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries);
+        for ( $i = 0; $i -lt $overridingDataArray.Length; $i+=2 ) {
+            $additionalArmParamsHashtable.Add($overridingDataArray[$i].substring(1), $overridingDataArray[$i+1]);
           }
     } else {
-        Write-Host "##vso[task.logissue type=warning;] additionalArmParams field does not contains = (equal) sign, so it could not be converted to hashtable"
+        Write-Host "##vso[task.logissue type=warning;] additionalArmParams field does not contains = (equal) sign, so it could not be converted to hashtable; or it does not starts with - (dash) sign"
     }
 
     Write-Verbose "Additional ARM parameters parsed to hashtable:"

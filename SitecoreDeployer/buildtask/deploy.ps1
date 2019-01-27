@@ -236,7 +236,7 @@ try {
     #checking, if we are running at Debug build, e.g system.debug is set to TRUE
     $isDebugBuild = $False;
     try {
-        $isDebugBuild = [System.Convert]::ToBoolean($SYSTEM_DEBUG)
+        $isDebugBuild = [System.Convert]::ToBoolean("$SYSTEM_DEBUG")
     } catch [FormatException] {}
     Write-Verbose "We are running debug build? $isDebugBuild"
 

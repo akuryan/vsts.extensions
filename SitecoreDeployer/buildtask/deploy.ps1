@@ -249,7 +249,8 @@ try {
         } else {
             New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
         }
-    } else {
+    }
+    if ($DeploymentType -eq "redeploy") {
         #deployment name is used to generate login to SQL as well - so for msdeploy and redeploy it shall be equal
         $deploymentName = "sitecore-msdeploy"
         # Fetch output parameters from Sitecore ARM deployment as authoritative source for the rest of web deploy params
@@ -262,6 +263,14 @@ try {
             New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable -Verbose;
         } else {
             New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
+        }
+    }
+    if ($DeploymentType -eq "validate") {
+        if ($isDebugBuild) {
+            #for debug build I wish more verbosity in output
+            Test-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -Verbose;
+        } else {
+            Test-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
         }
     }
 

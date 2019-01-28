@@ -20,9 +20,11 @@ Select your Azure subscription in which Sitecore resources shall be deployed in 
 
 ```Deployment type``` - select [Sitecore deployment type](https://www.robhabraken.nl/index.php/2740/blue-green-sitecore-deployments-on-azure/):
 
-    1. Infra - will deploy infrastructure only
+    1. Infrastructure - will deploy template and parameters as specified in file and task inputs, without reference to previous deployment
 
     1. Deploy - will try to get parameters from "sitecore-infra" deployment on resource group and add them to deployment parameters (so, this mode shall be used if you have had an infra deployment before)
+
+    1. Validate - will run template validation only (without actual deployment)
 
 ```Generate SAS``` - if set to ```True```, then, if your scwdp packages are located on storage account at same subscription, then powershell will generate short-time SAS signatures for them.
 

@@ -142,7 +142,7 @@
       "type": "pickList",
       "label": "License location",
       "required": true,
-      "helpMarkDown": "Please, select where license is located: Inline - paste license.xml content to multiline field; URL - enter URL, where valid license.xml could be downloaded; Filesystem - enter path, where license.xml is located on agent FS; none - license.xml content is added to ARM template already",
+      "helpMarkDown": "Please, select where license is located: Inline - paste license.xml content to multiline field (caution - this data is stored as environment variable, so you could not store more than 32 KiB in total for all variables); URL - enter URL, where valid license.xml could be downloaded; Filesystem - enter path, where license.xml is located on agent FS; none - license.xml content is added to ARM template already",
       "defaultValue": "none",
       "options": {
         "inline": "Inline",

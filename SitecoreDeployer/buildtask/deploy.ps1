@@ -124,20 +124,35 @@ Write-Verbose "Do we need to generate SAS? $GenerateSas"
 ListArmParameters -inputMessage "Listing keys before filling up by extension:" -armParamatersHashTable $additionalParams
 
 $deploymentIdkey = "deploymentId";
+$locationKey = "location"
 
 if ($DeploymentType -eq "infra") {
+    #this set of check is added specifically for those who forget that parameters file values will ALWAYS override parameters in template, even if set to empty
     #first - check, if there is such a key - who knows, maybe future versions of templates or your adopted templates does not use it
     if ($additionalParams.ContainsKey($deploymentIdkey)) {
-        Write-Verbose "There is a parameter $deploymentIdkey defined"
+        Write-Verbose "There is a parameter $deploymentIdkey key defined"
         #if deploymentId key is set in parameters - we shall not override it
         if ([string]::IsNullOrWhiteSpace($additionalParams[$deploymentIdkey])) {
-            Write-Verbose "$deploymentIdkey is empty, setting it to $RgName"
+            Write-Verbose "$deploymentIdkey key is empty, setting it to $RgName"
             $additionalParams.Set_Item($deploymentIdkey, $RgName);
         } else {
-            Write-Verbose "$deploymentIdkey is set in template"
+            Write-Verbose "$deploymentIdkey key is set in template"
         }
     } else {
-        Write-Verbose "$deploymentIdkey is not defined in parameter file"
+        Write-Verbose "$deploymentIdkey key is not defined in parameter file"
+    }
+
+    if ($additionalParams.ContainsKey($locationKey)) {
+        Write-Verbose "There is a parameter $locationKey key defined"
+        #if deploymentId key is set in parameters - we shall not override it
+        if ([string]::IsNullOrWhiteSpace($additionalParams[$locationKey])) {
+            Write-Verbose "$locationKey key is empty, setting it to $location"
+            $additionalParams.Set_Item($locationKey, $location);
+        } else {
+            Write-Verbose "$locationKey key is set in template"
+        }
+    } else {
+        Write-Verbose "$locationKey key is not defined in parameter file"
     }
 }
 

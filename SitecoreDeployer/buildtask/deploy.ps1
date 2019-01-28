@@ -137,7 +137,7 @@ if ($DeploymentType -eq "infra") {
             Write-Verbose "$deploymentIdkey is set in template"
         }
     } else {
-        Write-Verbose "$$deploymentIdkey is not defined in parameter file"
+        Write-Verbose "$deploymentIdkey is not defined in parameter file"
     }
 }
 
@@ -272,7 +272,10 @@ if ($DeploymentType -eq "validate") {
     }
 }
 
-LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
-LimitAccessToInstance -rgName $RgName -instanceName $instanceNameCm -instanceRole "cm" -limitAccessToInstanceAsString $limitCmAccessInput -ipMaskCollectionUserInput $ipList;
-LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
+if ($DeploymentType -ne "validate") {
+    #access limiting should not be executed on validation builds
+    LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
+    LimitAccessToInstance -rgName $RgName -instanceName $instanceNameCm -instanceRole "cm" -limitAccessToInstanceAsString $limitCmAccessInput -ipMaskCollectionUserInput $ipList;
+    LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
+}
 Write-Host "Deployment Complete.";

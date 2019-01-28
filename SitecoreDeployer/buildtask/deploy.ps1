@@ -144,7 +144,7 @@ if ($DeploymentType -eq "infra") {
 
     if ($additionalParams.ContainsKey($locationKey)) {
         Write-Verbose "There is a parameter $locationKey key defined"
-        #if deploymentId key is set in parameters - we shall not override it
+        #if location key is set in parameters - we shall not override it
         if ([string]::IsNullOrWhiteSpace($additionalParams[$locationKey])) {
             Write-Verbose "$locationKey key is empty, setting it to $location"
             $additionalParams.Set_Item($locationKey, $location);

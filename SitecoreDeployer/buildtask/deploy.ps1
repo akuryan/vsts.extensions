@@ -216,70 +216,63 @@ ListArmParameters -inputMessage "Listing keys AFTER filling up by extension:" -a
 
 #endregion
 
-try {
+Write-Host "Check if resource group already exists..."
+$notPresent = Get-AzureRmResourceGroup -Name $RgName -ev notPresent -ea 0;
 
-    Write-Host "Check if resource group already exists..."
-    $notPresent = Get-AzureRmResourceGroup -Name $RgName -ev notPresent -ea 0;
-
-    if (!$notPresent)
+if (!$notPresent)
+{
+    if ($DeploymentType -ne "infra")
     {
-        if ($DeploymentType -ne "infra")
-        {
-            #if it is not an infra deployment - than we shall throw error
-            throw "Resource group is not present, exiting"
-        }
-        New-AzureRmResourceGroup -Name $RgName -Location $location;
+        #if it is not an infra deployment - than we shall throw error
+        throw "Resource group is not present, exiting"
     }
-
-    Write-Host "Starting ARM deployment...";
-
-    #checking, if we are running at Debug build, e.g system.debug is set to TRUE
-    $isDebugBuild = $False;
-    try {
-        Write-Verbose "SYSTEM_DEBUG is set to $env:SYSTEM_DEBUG";
-        $isDebugBuild = [System.Convert]::ToBoolean($env:SYSTEM_DEBUG)
-    } catch [FormatException] {}
-    Write-Verbose "We are running debug build? $isDebugBuild"
-
-    if ($DeploymentType -eq "infra") {
-        $deploymentName = "sitecore-infra"
-        if ($isDebugBuild) {
-            #for debug build I wish more verbosity in output
-            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -Verbose;
-        } else {
-            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
-        }
-    }
-    if ($DeploymentType -eq "redeploy") {
-        #deployment name is used to generate login to SQL as well - so for msdeploy and redeploy it shall be equal
-        $deploymentName = "sitecore-msdeploy"
-        # Fetch output parameters from Sitecore ARM deployment as authoritative source for the rest of web deploy params
-        $sitecoreDeployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name "sitecore-infra"
-        $sitecoreDeploymentOutput = $sitecoreDeployment.Outputs
-        $sitecoreDeploymentOutputAsJson =  ConvertTo-Json $sitecoreDeploymentOutput -Depth 5
-        $sitecoreDeploymentOutputAsHashTable = ConvertPSObjectToHashtable $(ConvertFrom-Json $sitecoreDeploymentOutputAsJson)
-        if ($isDebugBuild) {
-            #for debug build I wish more verbosity in output
-            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable -Verbose;
-        } else {
-            New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
-        }
-    }
-    if ($DeploymentType -eq "validate") {
-        if ($isDebugBuild) {
-            #for debug build I wish more verbosity in output
-            Test-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -Verbose;
-        } else {
-            Test-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
-        }
-    }
-
-    LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
-    LimitAccessToInstance -rgName $RgName -instanceName $instanceNameCm -instanceRole "cm" -limitAccessToInstanceAsString $limitCmAccessInput -ipMaskCollectionUserInput $ipList;
-    LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
-    Write-Host "Deployment Complete.";
+    New-AzureRmResourceGroup -Name $RgName -Location $location;
 }
-catch {
-    Write-Error $_.Exception.Message
-    Break
+
+Write-Host "Starting ARM deployment...";
+
+#checking, if we are running at Debug build, e.g system.debug is set to TRUE
+$isDebugBuild = $False;
+try {
+    Write-Verbose "SYSTEM_DEBUG is set to $env:SYSTEM_DEBUG";
+    $isDebugBuild = [System.Convert]::ToBoolean($env:SYSTEM_DEBUG)
+} catch [FormatException] {}
+Write-Verbose "We are running debug build? $isDebugBuild"
+
+if ($DeploymentType -eq "infra") {
+    $deploymentName = "sitecore-infra"
+    if ($isDebugBuild) {
+        #for debug build I wish more verbosity in output
+        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -Verbose;
+    } else {
+        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
+    }
 }
+if ($DeploymentType -eq "redeploy") {
+    #deployment name is used to generate login to SQL as well - so for msdeploy and redeploy it shall be equal
+    $deploymentName = "sitecore-msdeploy"
+    # Fetch output parameters from Sitecore ARM deployment as authoritative source for the rest of web deploy params
+    $sitecoreDeployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name "sitecore-infra"
+    $sitecoreDeploymentOutput = $sitecoreDeployment.Outputs
+    $sitecoreDeploymentOutputAsJson =  ConvertTo-Json $sitecoreDeploymentOutput -Depth 5
+    $sitecoreDeploymentOutputAsHashTable = ConvertPSObjectToHashtable $(ConvertFrom-Json $sitecoreDeploymentOutputAsJson)
+    if ($isDebugBuild) {
+        #for debug build I wish more verbosity in output
+        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable -Verbose;
+    } else {
+        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -provisioningOutput $sitecoreDeploymentOutputAsHashTable;
+    }
+}
+if ($DeploymentType -eq "validate") {
+    if ($isDebugBuild) {
+        #for debug build I wish more verbosity in output
+        Test-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams -Verbose;
+    } else {
+        Test-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -TemplateFile $ArmTemplatePath -TemplateParameterObject $additionalParams;
+    }
+}
+
+LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
+LimitAccessToInstance -rgName $RgName -instanceName $instanceNameCm -instanceRole "cm" -limitAccessToInstanceAsString $limitCmAccessInput -ipMaskCollectionUserInput $ipList;
+LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
+Write-Host "Deployment Complete.";

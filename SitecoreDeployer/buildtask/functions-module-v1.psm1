@@ -391,3 +391,26 @@ function SplitUpOverrides {
     }
     return $targetHashTable;
 }
+
+#Gets parameters from parameter file
+function GetParametersFromParameterFile {
+    param (
+        [string]$filePath
+    )
+
+    if(![System.IO.File]::Exists($filePath)){
+        # file with path $path doesn't exist
+        Write-Host "Could not find parameters file at $filePath";
+        Exit 1;
+    }
+
+    $parameters = Get-Content $filePath -Raw | ConvertFrom-Json;
+
+    #now - test, what is in our parameters file
+    if ($null -ne $parameters.parameters -and $null -eq $parameters.parameters.value) {
+        #this means, that we are using default parameters file from Arm template, as it will have parameters as a collection, without value; if you you have parameter with a name "value" - then I am really sorry and I will fail here
+        $parameters = $parameters.parameters;
+    }
+
+    return $parameters;
+}

@@ -1,0 +1,23 @@
+{
+  "licenseXml": {
+    "value": "testValue"
+  },
+  "machineLearningServerConnectionString": {
+    "value": ""
+  },
+  "machineLearningServerBlobEndpointCertificatePath": {
+    "value": ""
+  },
+  "machineLearningServerBlobEndpointCertificatePassword": {
+    "value": ""
+  },
+  "machineLearningServerTableEndpointCertificatePath": {
+    "value": ""
+  },
+  "machineLearningServerTableEndpointCertificatePassword": {
+    "value": ""
+  },
+  "machineLearningServerEndpointCertificationAuthorityCertificatePath": {
+    "value": ""
+  }
+}

@@ -49,7 +49,7 @@ if(!($RgName -cmatch '^(?!.*--)[a-z0-9]{2}(|([a-z0-9\-]{0,37})[a-z0-9])$'))
 # license file needs to be secure string and adding the params as a hashtable is the only way to do it
 $additionalParams = New-Object -TypeName Hashtable;
 
-$params = Get-Content $ArmParametersPath -Raw | ConvertFrom-Json;
+$params = GetParametersFromParameterFile -filePath $ArmParametersPath;
 
 #check template - what parameter is used to limit access to CM and PRC role in template
 if ($limitPrcAccess) {

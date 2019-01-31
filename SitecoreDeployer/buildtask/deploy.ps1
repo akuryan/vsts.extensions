@@ -86,15 +86,27 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 
         $vaultName = Split-Path $params.$($p.Name).reference.keyVault.id -Leaf;
         $secretName = $params.$($p.Name).reference.secretName;
+        $secretVersion = $params.$($p.Name).reference.secretVersion;
 
         Write-Verbose "Trying to get secret $secretName from Azure keyvault $vaultName";
 
-        if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
-            #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
-            $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText;
-            Write-Verbose "URI text is $secret"
+        if ([string]::IsNullOrEmpty($secretVersion)) {
+            if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
+                #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
+                $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText;
+                Write-Verbose "URI text is $secret"
+            } else {
+                $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue;
+            }
         } else {
-            $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue;
+            Write-Verbose "Secret version have been specified";
+            if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
+                #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
+                $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName -Version $secretVersion).SecretValueText;
+                Write-Verbose "URI text is $secret"
+            } else {
+                $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName -Version $secretVersion).SecretValue;
+            }
         }
 
         Write-Verbose "Received secret $secretName from Azure keyvault $vaultName with value $secret";

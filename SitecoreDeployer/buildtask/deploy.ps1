@@ -82,32 +82,33 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 	if (($params.$($p.Name).reference) -and
 		($params.$($p.Name).reference.keyVault) -and
 		($params.$($p.Name).reference.keyVault.id) -and
-		($params.$($p.Name).reference.secretName)){
-        $vaultName = Split-Path $params.$($p.Name).reference.keyVault.id -Leaf
-        $secretName = $params.$($p.Name).reference.secretName
+		($params.$($p.Name).reference.secretName)) {
 
-        Write-Verbose "Trying to get secret $secretName from Azure keyvault $vaultName"
+        $vaultName = Split-Path $params.$($p.Name).reference.keyVault.id -Leaf;
+        $secretName = $params.$($p.Name).reference.secretName;
+
+        Write-Verbose "Trying to get secret $secretName from Azure keyvault $vaultName";
 
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
             #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
-            $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText
+            $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText;
             Write-Verbose "URI text is $secret"
         } else {
-            $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue
+            $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue;
         }
 
-        Write-Verbose "Received secret $secretName from Azure keyvault $vaultName with value $secret"
+        Write-Verbose "Received secret $secretName from Azure keyvault $vaultName with value $secret";
 
 		$additionalParams.Add($p.Name, $secret);
 	} else {
         # or a normal plain text parameter
         if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
-            $tempUrlForMessage = $params.$($p.Name).value
-            Write-Verbose "We are going to generate SAS for $tempUrlForMessage"
+            $tempUrlForMessage = $params.$($p.Name).value;
+            Write-Verbose "We are going to generate SAS for $tempUrlForMessage";
             #process replacement here
-            $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value
+            $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value;
             $additionalParams.Add($p.Name, $valueToAdd);
-            Write-Verbose "URI text is $valueToAdd"
+            Write-Verbose "URI text is $valueToAdd";
         } else {
             $additionalParams.Add($p.Name, $params.$($p.Name).value);
         }

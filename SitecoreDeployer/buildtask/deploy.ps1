@@ -202,10 +202,7 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
             $additionalArmParamsHashtable = ConvertFrom-StringData -StringData $additionalArmParams;
         }
     } elseif ($additionalArmParams.StartsWith("-")) {
-        $overridingDataArray = $additionalArmParams.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries);
-        for ( $i = 0; $i -lt $overridingDataArray.Length; $i+=2 ) {
-            $additionalArmParamsHashtable.Add($overridingDataArray[$i].substring(1), $overridingDataArray[$i+1]);
-          }
+        $additionalArmParamsHashtable = SplitUpOverrides -inputString $additionalArmParams;
     } else {
         Write-Host "##vso[task.logissue type=warning;] additionalArmParams field does not contains = (equal) sign, so it could not be converted to hashtable; or it does not starts with - (dash) sign"
     }

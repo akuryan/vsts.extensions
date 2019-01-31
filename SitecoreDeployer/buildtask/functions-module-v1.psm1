@@ -363,3 +363,31 @@ function ListArmParameters {
     }
     Write-Verbose "ListArmParameters: ended"
 }
+
+#this function will split overrides
+function SplitUpOverrides {
+    param (
+        [string]$inputString
+    )
+
+    $targetHashTable = @{};
+    $temporalArr = $inputString.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries);
+
+    for ($counter = 0; $counter -lt $temporalArr.Length; $counter++) {
+        #and here start the magic, since our input data could have spaces in values (but if we have spaces in values - they have to be enclosed in double quotes)
+        $key = $temporalArr[$counter].substring(1);
+        #increment counter to get value
+        $counter++;
+        $value = $temporalArr[$counter];
+        if ($value.StartsWith("`"")) {
+            #increment counter once again to get the value
+            $counter++;
+            #we need to add space, as value was splitted on it
+            $value = $value + " " + $temporalArr[$counter];
+            #remove double quoutes with value
+            $value = $value.Replace("`"","");
+        }
+        $targetHashTable.Add($key, $value);
+    }
+    return $targetHashTable;
+}

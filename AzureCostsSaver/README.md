@@ -41,6 +41,10 @@ Azure imposes limitation on amount of tags per resource - 15 tags. To overcome t
 
 This solution was required for Sitecore 9, which deploys 14 database
 
+## Version 2
+
+Fixes import of AzureRM modules on agent to use latest version; changes order of tag writing and actual down-/up- scaling; added retry feature for down-/up- scaling
+
 # Manual package preparation
 
 Install [nuget package CostsSaver-Azure.PowerShell](https://www.nuget.org/packages/CostsSaver-Azure.PowerShell/) in temp directory. Then copy psm1 files from ```tools``` folder of installed package to ```ps_modules\CostsSaver-Azure.PowerShell\```

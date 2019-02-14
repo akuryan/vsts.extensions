@@ -15,10 +15,6 @@ To improve reusability, script itself have been moved to Nuget - [package CostsS
 
 1. Script will silently fail if you try to run upscaling before downscaling
 
-1. Script will fail if Tags are missing
-
-1. There is no way for web apps to be downscaled to Basic, as at this point of time I could not check, if there is a staging slot on web app present (Basic does not allow slots at all)
-
 1. You shall be executing at VS2017 Hosted pool, if your web apps are running on PremiumV2 tier.
 
 ## Use case
@@ -40,6 +36,10 @@ SQL database sizes are stored as 2 tags on SQL server resource
 Azure imposes limitation on amount of tags per resource - 15 tags. To overcome this, sql database sizes are written as a string value, which is split to 256 chars per tag (each tag could not have more than 256 characters in value) and written to sql database server resource. On upscaling, this tags are read and size is reconstructed.
 
 This solution was required for Sitecore 9, which deploys 14 database
+
+## Version 2
+
+Fixes import of AzureRM modules on agent to use latest version; changes order of tag writing and actual down-/up- scaling; added retry feature for down-/up- scaling; Web apps without slots could be downscaled to Basic during downscale action.
 
 # Manual package preparation
 

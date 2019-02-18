@@ -40,6 +40,7 @@ function Import-AzureModule {
     try {
         #try to get latest azurerm_ module installed on agent
         $hostedAgentAzureRmModulePath = Get-LatestModule -patternToMatch "^azurerm_[0-9]+\.[0-9]+\.[0-9]+$" -patternToExtract "[0-9]+\.[0-9]+\.[0-9]+$";
+        $env:PSModulePath = $hostedAgentAzureRmModulePath + ";" + $env:PSModulePath;
         $env:PSModulePath = $env:PSModulePath.TrimStart(';');
         Write-Verbose "Env:PSModulePath: '$env:PSMODULEPATH'";
         if ($PreferAzureRM) {

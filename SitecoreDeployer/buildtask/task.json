@@ -118,7 +118,7 @@
       "type": "pickList",
       "label": "Deployment type",
       "required": true,
-      "helpMarkDown": "Select deployment type according to definition: Infrastructure creates required resources; Deploy - gets output of Infra deployment, adds it to collection of parameters and deploys vanilla Sitecore (with or without databases - depends on template). Defaults to infrastructure deployment, as it is full deployment type without any reference to previous deployments",
+      "helpMarkDown": "Select deployment type according to definition: Infrastructure means clean deployment; Deploy - gets output of Infra deployment (it tries to seek for output of sitecore-infra deployment at target resource group), adds it to collection of parameters; Validate - will just validate your template and all parameters. Defaults to infrastructure deployment, as it is full deployment type without any reference to previous deployments",
       "defaultValue": "infra",
       "options": {
         "infra": "Infrastructure",

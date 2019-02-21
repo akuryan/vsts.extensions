@@ -32,6 +32,8 @@ Select your Azure subscription in which Sitecore resources shall be deployed in 
 
 ```Additional ARM parameters``` - allows to pass additional or override existing parameters to ARM templates. This string shall be passed in ```-name value``` format, use grid editor for changing this. Example: ```-sas ?st=2018-05-28&test=test -url test```. Use case for this: usage of nested templates, which requires that templates are being accessed only via HTTP(S) (Sitecore 9 deployments, for example): when storing templates at closed source control repository, not accessible from the wild Internet, you could push them to blob storage in folder with release number (achieving versioning), generate a link and pass it along with short living SAS to a task in parameters. Previous format with ```name=value``` format, several parameters shall be separated by line end symbol ``` \n ```(do not forget about space symbol before and after). Example: ```sas=?st=2018-05-28&test=test \n url=test``` is supported, if entered manually (or when upgrading version), but usage is discouraged, as there is no supproted editor for it. Please, be aware that in next version ```name=value``` will be phased out.
 
+If your release have ```system.debug``` variable set to ```true``` - verbosity of output will be bigger, but there is an issue: even if deployment fails, Sitecore Deployer step will be still considered as green :( .
+
 ### Template parameters at KeyVault
 
 If you wish too - you can store template parameters sensitive values in Azure KeyVault - this allows better security and (if you wish too) shared responsibilities: developers do not necessary need to know Sitecore admin password, for example... To reach this, one shall replace regular parameter definition, which looks like this:

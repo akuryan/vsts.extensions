@@ -1,4 +1,4 @@
-# Sitecore Deployer for VSTS
+# Sitecore Deployer for Azure DevOps
 
 This release task is based on our mutual work with [Rob Habraken](https://github.com/robhabraken) on [Sitecore deployment script for Azure](https://github.com/robhabraken/Sitecore-Azure-Scripts/tree/master/Scripts/00%20Functions)
 

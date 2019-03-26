@@ -3,7 +3,7 @@
 	"id": "SitecoreAzureVstsDeployer",
 	"version": "0.0.1",
 	"name": "Sitecore to Azure Deployer",
-	"description": "A VSTS Release Task to deploy Sitecore in Azure",
+	"description": "An Azure DevOps Release Task to deploy Sitecore in Azure",
 	"publisher": "anton-kuryan",
 	"public": true,
     "content": {

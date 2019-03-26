@@ -1,0 +1,47 @@
+{
+	"manifestVersion": 1,
+	"id": "WhiteSourceScanner",
+	"version": "0.0.1",
+	"name": "WhiteSource Scanner task",
+	"description": "An Azure DevOps Build/Release Task to perform WhiteSource scanner",
+	"publisher": "anton-kuryan",
+	"public": true,
+    "content": {
+        "details": {
+            "path": "README.md"
+        }
+	},
+	"categories": [
+		"Build and release"
+	],
+    "repository": {
+        "type": "git",
+        "uri": "https://github.com/akuryan/vsts.extensions/tree/master/Analysis/WhiteSource"
+    },
+	"targets": [
+		{
+			"id": "Microsoft.VisualStudio.Services"
+			}
+		],
+	"icons": {
+		"default": "images/icons/icon-small.png",
+		"large": "images/icons/icon.jpg"
+	 },
+	"contributions": [
+		{
+			"id": "WhiteSourceScanner",
+			"type": "ms.vss-distributed-task.task",
+			"targets": [
+				"ms.vss-distributed-task.tasks"
+			],
+			"properties": {
+				"name": "buildtask"
+			}
+		}
+	],
+	"files":[
+		{
+			"path": "buildtask"
+		}
+	]
+}

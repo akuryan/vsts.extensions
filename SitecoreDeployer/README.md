@@ -6,8 +6,6 @@ This extension will deploy Sitecore in Azure basing on ARM templates, developed 
 
 ## Usage
 
-Select your Azure Connection Type (normally, it shall be ```Azure Resource Manager```) - this shall be preconfigured on your VSTS instance.
-
 Select your Azure subscription in which Sitecore resources shall be deployed in field ```Azure RM Subscription```
 
 ```ARM template path``` - provide path to ARM template

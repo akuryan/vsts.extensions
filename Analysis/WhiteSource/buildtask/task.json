@@ -1,5 +1,5 @@
 {
-  "id": "{38AD8E23-476F-4649-A5D1-D796EC9A626F}",
+  "id": "{9B1A5A80-1705-4A74-9C1E-C5C67F0EF6CA}",
   "name": "WhiteSourceScanner",
   "friendlyName": "WhiteSource Scanner task",
   "description": "An Azure DevOps Build/Release Task to perform WhiteSource scanner",

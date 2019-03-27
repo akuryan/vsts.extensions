@@ -29,7 +29,7 @@
 		"default": "images/icons/icon-small.png",
 		"large": "images/icons/icon.png"
 	 },
-	"categories": ["Build and release"],
+	"categories": ["Azure Pipelines"],
 	"contributions": [
 		{
 			"id": "AzureCostsSaver",

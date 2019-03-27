@@ -1,12 +1,10 @@
-# Sitecore Deployer for VSTS
+# Sitecore Deployer for Azure DevOps
 
 This release task is based on our mutual work with [Rob Habraken](https://github.com/robhabraken) on [Sitecore deployment script for Azure](https://github.com/robhabraken/Sitecore-Azure-Scripts/tree/master/Scripts/00%20Functions)
 
 This extension will deploy Sitecore in Azure basing on ARM templates, developed by Rob and inherited from Sitecore.
 
 ## Usage
-
-Select your Azure Connection Type (normally, it shall be ```Azure Resource Manager```) - this shall be preconfigured on your VSTS instance.
 
 Select your Azure subscription in which Sitecore resources shall be deployed in field ```Azure RM Subscription```
 

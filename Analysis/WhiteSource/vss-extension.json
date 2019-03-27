@@ -1,9 +1,9 @@
 {
 	"manifestVersion": 1,
-	"id": "SitecoreAzureVstsDeployer",
+	"id": "WhiteSourceScanner",
 	"version": "0.0.1",
-	"name": "Sitecore to Azure Deployer",
-	"description": "An Azure DevOps Release Task to deploy Sitecore in Azure",
+	"name": "WhiteSource Scanner task",
+	"description": "An Azure DevOps Build/Release Task to perform WhiteSource scanner",
 	"publisher": "anton-kuryan",
 	"public": true,
     "content": {
@@ -16,7 +16,7 @@
 	],
     "repository": {
         "type": "git",
-        "uri": "https://github.com/akuryan/vsts.extensions/tree/master/SitecoreDeployer"
+        "uri": "https://github.com/akuryan/vsts.extensions/tree/master/Analysis/WhiteSource"
     },
 	"targets": [
 		{
@@ -25,16 +25,11 @@
 		],
 	"icons": {
 		"default": "images/icons/icon-small.png",
-		"large": "images/icons/icon.png"
+		"large": "images/icons/icon.jpg"
 	 },
-	 "screenshots": [
-		 {
-			 "path": "images/screenshots/add-task.png"
-		 }
-	 ],
 	"contributions": [
 		{
-			"id": "SitecoreAzureVstsDeployer",
+			"id": "WhiteSourceScanner",
 			"type": "ms.vss-distributed-task.task",
 			"targets": [
 				"ms.vss-distributed-task.tasks"

@@ -56,7 +56,7 @@
     },
     {
       "name": "wssConfigPath",
-      "type": "string",
+      "type": "filePath",
       "label": "Path to WhiteSource config in project",
       "defaultValue": "",
       "required": false,
@@ -71,7 +71,40 @@
       "required": false,
       "helpMarkDown": "",
       "visibleRule": "projectHaveConfig = False"
+    },
+    {
+      "name": "version",
+      "type": "string",
+      "label": "Project version:",
+      "defaultValue": "$(BuildID)",
+      "required": true,
+      "helpMarkDown": ""
     },    
+    {
+      "name": "fileScanPattern",
+      "type": "string",
+      "label": "File scan pattern:",
+      "defaultValue": "**/*.cs **/*.js **/*.scss **/*.jsx",
+      "required": false,
+      "helpMarkDown": "Comma, space or line separated list of Ant-style GLOB patterns specifying which files to include in the scan.",
+      "visibleRule": "projectHaveConfig = False"
+    },
+    {
+      "name": "wssApiKey",
+      "type": "string",
+      "label": "WhiteSource API key:",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Unique identifier of the organization. Can be retrieved from the admin page in your WhiteSource account."
+    },
+    {
+      "name": "scanPath",
+      "type": "filePath",
+      "label": "Directory to scan:",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": ""
+    }
   ],
   "instanceNameFormat": "StartAzureDevOpsScanner",
   "execution": {

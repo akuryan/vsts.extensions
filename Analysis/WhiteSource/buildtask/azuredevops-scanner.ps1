@@ -9,9 +9,19 @@ Write-Verbose "Are we going to force scanner download? $forceDownload";
 
 $scannerTargetPath = Get-VstsInput -Name scannerTargetPath;
 
-$wssConfigPath = Get-VstsInput -Name wssConfigPath;
-
 $projectName = Get-VstsInput -Name projectName;
 
+$wssConfigPath = Get-VstsInput -Name wssConfigPath;
 
+$projectVersion = Get-VstsInput -Name version;
 
+$fileScanPattern = Get-VstsInput -Name fileScanPattern;
+
+$wssApiKey = Get-VstsInput -Name wssApiKey;
+
+$scanPath = Get-VstsInput -Name scanPath;
+
+#Import module, installed as nuget
+Import-Module $PSScriptRoot\ps_modules\Scanners-WhiteSource.PowerShell\tools\whitesource-scanner.psm1
+
+Scan-Sources -ForceDownload $forceDownload -AgentPath $scannerTargetPath -ProjectName $projectName -WssConfigurationPath $wssConfigPath -Version $projectVersion -FileScanPattern $fileScanPattern -WssApiKey $wssApiKey -ScanPath $scanPath;

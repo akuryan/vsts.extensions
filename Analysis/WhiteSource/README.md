@@ -21,8 +21,8 @@ rem Install module from nuget
 nuget install Scanners-WhiteSource.PowerShell -OutputDirectory %Temp%
 pushd %temp%\Scanners-WhiteSource.PowerShell*
 rem Create directory for module
-mkdir yourPathHere\ps_modules\buildtask\Scanners-WhiteSource.PowerShell\tools\
+mkdir yourPathHere\ps_modules\Scanners-WhiteSource.PowerShell\tools\
 rem Copy module to directory
-xcopy tools\* yourPathHere\ps_modules\buildtask\Scanners-WhiteSource.PowerShell\tools\ /F /S /Q /Y
+xcopy tools\* yourPathHere\ps_modules\Scanners-WhiteSource.PowerShell\tools\ /F /S /Q /Y
 popd
 ```

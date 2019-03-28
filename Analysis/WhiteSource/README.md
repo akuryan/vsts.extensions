@@ -9,6 +9,14 @@ For reusability reason, powershell module is published as [NuGet package](https:
 
 ## Usage
 
+Install extension at your Azure DevOps instance and configure it.
+
+Before executing this task - restore NuGet/npm/yarn/whatever packages you have (so, your pipeline must have this steps preconfigured).
+
+This extension is built using [WhiteSource unified agent](https://github.com/whitesource/unified-agent-distribution/blob/master/standAlone/wss-unified-agent.jar), and expects that you have either configuration file ready (you can get it [here](https://github.com/whitesource/unified-agent-distribution/blob/master/standAlone/wss-unified-agent.config)) or it will configure download and use default one.
+
+Set up extension by filling required fields. If you wish to tailor down configuration completely - [download config file](https://github.com/whitesource/unified-agent-distribution/blob/master/standAlone/wss-unified-agent.config)) and store it in repository. If you can go with defaults - let extension to download it.
+
 ## Manual package preparation
 
 Install [NuGet package](https://www.nuget.org/packages/Scanners-WhiteSource.PowerShell/) in temp directory. Then copy ```tools``` folder of installed package to ```ps_modules\Scanners-WhiteSource.PowerShell\```

@@ -23,32 +23,12 @@
 ],
   "inputs": [
     {
-      "name": "forceDownload",
-      "type": "pickList",
-      "label": "Force redownload of scanner",
-      "required": true,
-      "helpMarkDown": "",
-      "defaultValue": "No",
-      "options": {
-        "True": "Yes",
-        "False": "No"
-      }
-    },
-    {
-      "name": "scannerTargetPath",
-      "type": "string",
-      "label": "Download scanner to:",
-      "defaultValue": "",
-      "required": false,
-      "helpMarkDown": "Enter path on agent where scanner will be downloaded; if empty - it will be downloaded to temp folder."
-    },
-    {
       "name": "projectHaveConfig",
       "type": "pickList",
       "label": "Please, specify, if project have configuration file for WhiteSource.",
       "required": true,
       "helpMarkDown": "If project do not have config file - default one will be downloaded and you will have possibility to specify some values in task",
-      "defaultValue": "No",
+      "defaultValue": "False",
       "options": {
         "True": "Yes",
         "False": "No"
@@ -104,7 +84,27 @@
       "defaultValue": "",
       "required": true,
       "helpMarkDown": ""
-    }
+    },
+    {
+      "name": "forceDownload",
+      "type": "pickList",
+      "label": "Force redownload of scanner",
+      "required": true,
+      "helpMarkDown": "",
+      "defaultValue": "No",
+      "options": {
+        "True": "Yes",
+        "False": "No"
+      }
+    },
+    {
+      "name": "scannerTargetPath",
+      "type": "string",
+      "label": "Download scanner to:",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Enter path on agent where scanner will be downloaded; if empty - it will be downloaded to temp folder."
+    }    
   ],
   "instanceNameFormat": "StartAzureDevOpsScanner",
   "execution": {

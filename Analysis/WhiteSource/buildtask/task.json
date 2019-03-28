@@ -76,7 +76,7 @@
       "name": "version",
       "type": "string",
       "label": "Project version:",
-      "defaultValue": "$(BuildID)",
+      "defaultValue": "$(Build.BuildId)",
       "required": true,
       "helpMarkDown": ""
     },    

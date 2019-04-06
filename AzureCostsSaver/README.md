@@ -23,7 +23,7 @@ Downscale Azure resources for Testing and Acceptance environments during nights 
 
 ### Details
 
-Please, read [post](https://colours.nl/azure-costs-saver) detailing usage and possible use cases as well.
+Please, read [post](https://dobryak.org/saving-money-with-azure-costs-saver-vsts-extension/) detailing usage and possible use cases as well.
 
 # Changes history
 

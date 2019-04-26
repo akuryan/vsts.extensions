@@ -1,11 +1,13 @@
 # Costs saver for Azure
 
+[![Build status](https://dev.azure.com/dobryak/Nuget%20packages/_apis/build/status/AzureDevOps-Extensions/AzureCostsSaver)](https://dev.azure.com/dobryak/Nuget%20packages/_build/latest?definitionId=5)
+
 This package is designed to save on costs of resources in Azure. Usually, one is not using Test and Acceptance resources during nights and weekends, but not everybody can afford themselves to destroy those resources and recreate them (complex configurations, too much manual interventions, whateverYouNameIt).
 So, I designed this small script for VSTS, which requires your connection to Azure RM and wants your resource group name to proceed.
 
-If you select to downscale your resources (running at evening) - it will find all SQL databases, all web apps and all VMs belonging to given resource group and will downscale web apps and sql databases to lowest possible size, vm's will be deprovisioned. If you select to upscale resources - script will read tags on them and upscale resources (web app and sql databases), vm's will be started.
+If you select to downscale your resources (running at evening) - it will find all SQL databases and elastic pools, all web apps and all VMs belonging to given resource group and will downscale web apps, sql databases and elastic pools to lowest possible size, vm's will be deprovisioned. If you select to upscale resources - script will read tags on them and upscale resources (web app, sql databases and elastic pools), vm's will be started.
 
-SQL databases sizes tags are stored on SQL server resource, as they tend to dissappear on SQL database resource.
+SQL databases sizes tags are stored on SQL server resource, as they tend to dissappear from SQL database resource.
 
 ## Script location
 
@@ -16,6 +18,8 @@ To improve reusability, script itself have been moved to Nuget - [package CostsS
 1. Script will silently fail if you try to run upscaling before downscaling
 
 1. You shall be executing at VS2017 Hosted pool, if your web apps are running on PremiumV2 tier.
+
+1. Extension could fail if there is elastic pool with the same name as database.
 
 ## Use case
 
@@ -39,7 +43,7 @@ This solution was required for Sitecore 9, which deploys 14 database
 
 ## Version 2
 
-Fixes import of AzureRM modules on agent to use latest version; changes order of tag writing and actual down-/up- scaling; added retry feature for down-/up- scaling; Web apps without slots could be downscaled to Basic during downscale action.
+Fixes import of AzureRM modules on agent to use latest version; changes order of tag writing and actual down-/up- scaling; added retry feature for down-/up- scaling; Web apps without slots will be downscaled to Basic during downscale action.
 
 # Manual package preparation
 

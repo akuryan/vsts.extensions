@@ -1,5 +1,7 @@
 # Sitecore Deployer for Azure DevOps
 
+[![Build status](https://dev.azure.com/dobryak/NugetsAndExtensions/_apis/build/status/AzureDevOps-Extensions/Sitecore%20Azure%20Vsts%20Deployer)](https://dev.azure.com/dobryak/NugetsAndExtensions/_build/latest?definitionId=7)
+
 This release task is based on our mutual work with [Rob Habraken](https://github.com/robhabraken) on [Sitecore deployment script for Azure](https://github.com/robhabraken/Sitecore-Azure-Scripts/tree/master/Scripts/00%20Functions)
 
 This extension will deploy Sitecore in Azure basing on ARM templates, developed by Rob and inherited from Sitecore.

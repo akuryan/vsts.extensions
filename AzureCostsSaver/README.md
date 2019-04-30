@@ -1,6 +1,6 @@
 # Costs saver for Azure
 
-[![Build status](https://dev.azure.com/dobryak/Nuget%20packages/_apis/build/status/AzureDevOps-Extensions/AzureCostsSaver)](https://dev.azure.com/dobryak/Nuget%20packages/_build/latest?definitionId=5)
+[![Build status](https://dev.azure.com/dobryak/NugetsAndExtensions/_apis/build/status/AzureDevOps-Extensions/AzureCostsSaver)](https://dev.azure.com/dobryak/NugetsAndExtensions/_build/latest?definitionId=5)
 
 This package is designed to save on costs of resources in Azure. Usually, one is not using Test and Acceptance resources during nights and weekends, but not everybody can afford themselves to destroy those resources and recreate them (complex configurations, too much manual interventions, whateverYouNameIt).
 So, I designed this small script for VSTS, which requires your connection to Azure RM and wants your resource group name to proceed.

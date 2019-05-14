@@ -2,8 +2,8 @@
 	"manifestVersion": 1,
 	"id": "WhiteSourceScanner",
 	"version": "0.0.1",
-	"name": "WhiteSource Scanner task",
-	"description": "An Azure DevOps Build/Release Task to perform WhiteSource scanner",
+	"name": "Wrapper above WS-Scanner",
+	"description": "An Azure DevOps Build/Release Task to perform execute WhiteSource unified scanner",
 	"publisher": "anton-kuryan",
 	"public": true,
     "content": {
@@ -25,7 +25,7 @@
 		],
 	"icons": {
 		"default": "images/icons/icon-small.png",
-		"large": "images/icons/icon.jpg"
+		"large": "images/icons/icon.png"
 	 },
 	"contributions": [
 		{

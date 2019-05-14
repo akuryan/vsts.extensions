@@ -217,8 +217,10 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
 }
 
 ListArmParameters -inputMessage "Listing keys AFTER filling up by extension:" -armParamatersHashTable $additionalParams
+#to avoid collection was modified error - I need to work on copy of collection
+$additionalArmParamsHashtable = $additionalParams;
 
-foreach ($paramKey in $additionalParams.Keys) {
+foreach ($paramKey in $additionalArmParamsHashtable.Keys) {
     #iterate each key and check if it is possibly a link to a blob storage and we can generate SAS 
     if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $paramKey -generate $GenerateSas) {
         Write-Verbose "Seems that key $paramKey could contain URL for something";

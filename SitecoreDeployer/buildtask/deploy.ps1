@@ -91,22 +91,10 @@ foreach($p in $params | Get-Member -MemberType *Property) {
         Write-Verbose "Trying to get secret $secretName from Azure keyvault $vaultName";
 
         if ([string]::IsNullOrEmpty($secretVersion)) {
-            if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
-                #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
-                $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValueText;
-                Write-Verbose "URI text is $secret"
-            } else {
-                $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue;
-            }
+            $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName).SecretValue;
         } else {
             Write-Verbose "Secret version have been specified";
-            if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
-                #if parameter name contains msdeploy or url - it is great point of deal that we have URL to our package here
-                $secret = TryGenerateSas -maybeStorageUri (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName -Version $secretVersion).SecretValueText;
-                Write-Verbose "URI text is $secret"
-            } else {
-                $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName -Version $secretVersion).SecretValue;
-            }
+            $secret = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName -Version $secretVersion).SecretValue;
         }
 
         Write-Verbose "Received secret $secretName from Azure keyvault $vaultName with value $secret";
@@ -114,16 +102,7 @@ foreach($p in $params | Get-Member -MemberType *Property) {
 		$additionalParams.Add($p.Name, $secret);
 	} else {
         # or a normal plain text parameter
-        if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $p.Name -generate $GenerateSas) {
-            $tempUrlForMessage = $params.$($p.Name).value;
-            Write-Verbose "We are going to generate SAS for $tempUrlForMessage";
-            #process replacement here
-            $valueToAdd = TryGenerateSas -maybeStorageUri $params.$($p.Name).value;
-            $additionalParams.Add($p.Name, $valueToAdd);
-            Write-Verbose "URI text is $valueToAdd";
-        } else {
-            $additionalParams.Add($p.Name, $params.$($p.Name).value);
-        }
+        $additionalParams.Add($p.Name, $params.$($p.Name).value);
 	}
 }
 
@@ -238,6 +217,20 @@ if (-not [string]::IsNullOrWhiteSpace($additionalArmParams)) {
 }
 
 ListArmParameters -inputMessage "Listing keys AFTER filling up by extension:" -armParamatersHashTable $additionalParams
+
+foreach ($paramKey in $additionalParams.Keys) {
+    #iterate each key and check if it is possibly a link to a blob storage and we can generate SAS 
+    if (CheckIfPossiblyUriAndIfNeedToGenerateSas -name $paramKey -generate $GenerateSas) {
+        Write-Verbose "Seems that key $paramKey could contain URL for something";
+        $currentValue = $additionalParams[$paramKey];
+        Write-Verbose "We are going to try to generate SAS for URL $currentValue";
+        $generatedValue = TryGenerateSas -maybeStorageUri $currentValue;
+        Write-Verbose "$currentValue after SAS generation routine became $generatedValue";
+        $additionalParams.Set_Item($paramKey, $generatedValue);
+    }
+}
+
+ListArmParameters -inputMessage "Listing keys AFTER SAS generation:" -armParamatersHashTable $additionalParams
 
 #endregion
 

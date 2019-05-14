@@ -45,6 +45,12 @@ function TryGenerateSas {
     process {
         Write-Verbose "Starting TryGenerateSas"
 
+        if ($escapedUri -inotmatch "$blobBaseDomain") {
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri does not contain $blobBaseDomain"
+            #InputUri does not contains blob.core.windows.net
+            return $escapedUri
+        }        
+
         if ($maybeStorageUri -match '%') {
             Write-Verbose "TryGenerateSas: $maybeStorageUri already escaped"
             #percent sign is not allowed in URL by itself, so, if it is present - this URI is escaped already
@@ -62,11 +68,6 @@ function TryGenerateSas {
         if (-Not [system.uri]::IsWellFormedUriString($escapedUri,[System.UriKind]::Absolute)) {
             #check, if it actually absolute URI
             Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri is not absolute"
-            return $escapedUri
-        }
-        if ($escapedUri -inotmatch "$blobBaseDomain") {
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri does not contain $blobBaseDomain"
-            #InputUri does not contains blob.core.windows.net
             return $escapedUri
         }
         $parsedUri = [Uri]$escapedUri

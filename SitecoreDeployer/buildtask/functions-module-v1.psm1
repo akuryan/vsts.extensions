@@ -43,57 +43,57 @@ function TryGenerateSas {
     )
 
     process {
-        Write-Verbose "Starting TryGenerateSas"
-
-        if ($escapedUri -inotmatch "$blobBaseDomain") {
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri does not contain $blobBaseDomain"
-            #InputUri does not contains blob.core.windows.net
-            return $escapedUri
-        }        
+        Write-Verbose "Starting TryGenerateSas";
 
         if ($maybeStorageUri -match '%') {
-            Write-Verbose "TryGenerateSas: $maybeStorageUri already escaped"
+            Write-Verbose "TryGenerateSas: $maybeStorageUri already escaped";
             #percent sign is not allowed in URL by itself, so, if it is present - this URI is escaped already
-            $escapedUri = $maybeStorageUri
+            $escapedUri = $maybeStorageUri;
         } else {
-            Write-Verbose "TryGenerateSas: $maybeStorageUri not escaped"
-            $escapedUri = [uri]::EscapeUriString($maybeStorageUri)
-            Write-Verbose "TryGenerateSas: $maybeStorageUri have been escaped to $escapedUri"
+            Write-Verbose "TryGenerateSas: $maybeStorageUri not escaped";
+            $escapedUri = [uri]::EscapeUriString($maybeStorageUri);
+            Write-Verbose "TryGenerateSas: $maybeStorageUri have been escaped to $escapedUri";
         }
 
         if ([string]::IsNullOrEmpty($escapedUri)) {
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL is empty"
-            return $escapedUri
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL is empty";
+            return $escapedUri;
         }
         if (-Not [system.uri]::IsWellFormedUriString($escapedUri,[System.UriKind]::Absolute)) {
             #check, if it actually absolute URI
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri is not absolute"
-            return $escapedUri
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri is not absolute";
+            return $escapedUri;
         }
-        $parsedUri = [Uri]$escapedUri
-        $storageAccountName = $parsedUri.DnsSafeHost -replace "$blobBaseDomain", ""
+        if ($escapedUri -inotmatch "$blobBaseDomain") {
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: URL $escapedUri does not contain $blobBaseDomain";
+            #InputUri does not contains blob.core.windows.net
+            return $escapedUri;
+        }  
+
+        $parsedUri = [Uri]$escapedUri;
+        $storageAccountName = $parsedUri.DnsSafeHost -replace "$blobBaseDomain", "";
         if ([string]::IsNullOrEmpty($storageAccountName)) {
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Could not retrieve storage account from $escapedUri"
-            return $escapedUri
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Could not retrieve storage account from $escapedUri";
+            return $escapedUri;
         }
 
-        $containerName = $parsedUri.Segments[1]
+        $containerName = $parsedUri.Segments[1];
         if ([string]::IsNullOrEmpty($containerName)) {
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Could not retrieve container name from $escapedUri"
-            return $escapedUri
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Could not retrieve container name from $escapedUri";
+            return $escapedUri;
         }
-        $containerName = $containerName -replace '/',""
+        $containerName = $containerName -replace '/',"";
         if ([string]::IsNullOrEmpty($containerName)) {
-            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Container name from $escapedUri is empty"
-            return $escapedUri
+            Write-Host "##vso[task.logissue type=warning;] TryGenerateSas: Container name from $escapedUri is empty";
+            return $escapedUri;
         }
 
-        $sasKey = $storageAccountName + "-" + $containerName
-        $packageUri = $escapedUri
+        $sasKey = $storageAccountName + "-" + $containerName;
+        $packageUri = $escapedUri;
         if ($generatedSas.ContainsKey($sasKey)) {
             #we already generated SAS for this container
             if (-not [string]::IsNullOrEmpty($generatedSas[$sasKey])) {
-                $packageUri = $parsedUri.Scheme + "://" + $parsedUri.DnsSafeHost + $parsedUri.LocalPath + $generatedSas[$sasKey]
+                $packageUri = $parsedUri.Scheme + "://" + $parsedUri.DnsSafeHost + $parsedUri.LocalPath + $generatedSas[$sasKey];
             }
         }
         else {
@@ -102,12 +102,12 @@ function TryGenerateSas {
             #if $sasValue is not empty - we shall implement it
             if (-not [string]::IsNullOrEmpty($sasValue)) {
                 #store generated SAS in global variable, as getting storage is time consuming process
-                $generatedSas.Add($sasKey, $sasValue)
-                $packageUri = $parsedUri.Scheme + "://" + $parsedUri.DnsSafeHost + $parsedUri.LocalPath + $sasValue
+                $generatedSas.Add($sasKey, $sasValue);
+                $packageUri = $parsedUri.Scheme + "://" + $parsedUri.DnsSafeHost + $parsedUri.LocalPath + $sasValue;
             }
         }
-        Write-Verbose "Ended TryGenerateSas"
-        return  $packageUri
+        Write-Verbose "Ended TryGenerateSas";
+        return  $packageUri;
     }
 }
 

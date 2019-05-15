@@ -365,6 +365,18 @@ function ListArmParameters {
     Write-Verbose "ListArmParameters: ended"
 }
 
+function GetNextValueFromArray {
+    param (
+        [array]$array,
+        [int]$currentCounter
+    )
+
+    if (($currentCounter + 1) -ge $array.Length) {
+        return "-";
+    }
+    return $array[$currentCounter + 1];
+}
+
 #this function will split overrides
 function SplitUpOverrides {
     param (
@@ -376,16 +388,26 @@ function SplitUpOverrides {
 
     for ($counter = 0; $counter -lt $temporalArr.Length; $counter++) {
         #and here start the magic, since our input data could have spaces in values (but if we have spaces in values - they have to be enclosed in double quotes)
-        $key = $temporalArr[$counter].substring(1);
+        $key = $temporalArr[$counter].Replace("-","");
         #increment counter to get value
         $counter++;
         $value = $temporalArr[$counter];
-        if ($value.StartsWith("`"")) {
-            #increment counter once again to get the value
-            $counter++;
-            #we need to add space, as value was splitted on it
-            $value = $value + " " + $temporalArr[$counter];
-            #remove double quoutes with value
+        if ($value.StartsWith("`"") -and !$value.EndsWith("`"")) {
+
+            $nextValue = GetNextValueFromArray -array $temporalArr -currentCounter $counter;
+
+            #if value starts with double quote, but does not end with it - let's seek for a next value which starts with dash
+            while (!$nextValue.StartsWith("-")) {
+                #and collect it in our value
+                $counter++;
+                #we need to add space, as value was splitted on it
+                $value = $value + " " + $nextValue;
+                $nextValue = GetNextValueFromArray -array $temporalArr -currentCounter $counter;
+            }
+            #remove double quoutes within value
+            $value = $value.Replace("`"","");
+        } else {
+            #just remove doubel quotes within value
             $value = $value.Replace("`"","");
         }
         $targetHashTable.Add($key, $value);

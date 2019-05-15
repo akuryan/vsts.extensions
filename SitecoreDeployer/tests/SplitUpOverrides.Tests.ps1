@@ -12,9 +12,14 @@ CompareValuesAndExitIfFail -value1 $testHashTable2["test"] -value2 "123";
 CompareValuesAndExitIfFail -value1 $testHashTable2["test3"] -value2 "123 123";
 
 Write-Host "Iteration 3";
-$testString = '-test 123 -test2 1234 -test3 "123 123" -test4 123-3123';
+$testString = '-test 123 -test3 "123 testing spaces" -test4 "1234" -test5 "123" -test6 "1234" -test7 1234 -test8 "testing spaces again" -test9 noSpaces';
 $testHashTable3 = SplitUpOverrides -inputString $testString;
 
 CompareValuesAndExitIfFail -value1 $testHashTable3["test"] -value2 "123";
-CompareValuesAndExitIfFail -value1 $testHashTable3["test3"] -value2 "123 123";
-CompareValuesAndExitIfFail -value1 $testHashTable3["test4"] -value2 "123-3123";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test3"] -value2 "123 testing spaces";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test4"] -value2 "1234";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test5"] -value2 "123";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test6"] -value2 "1234";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test7"] -value2 "1234";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test8"] -value2 "testing spaces again";
+CompareValuesAndExitIfFail -value1 $testHashTable3["test9"] -value2 "noSpaces";

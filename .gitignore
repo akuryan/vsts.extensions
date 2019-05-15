@@ -1,3 +1,4 @@
 *.vsix
 [Aa]zure[Cc]osts[Ss]aver/buildtask/ps_modules/CostsSaver-Azure.PowerShell
 [Aa]nalysis/[Ww]hite[Ss]ource/buildtask/ps_modules/[Ss]canners-[Ww]hite[Ss]ource.[Pp]ower[Ss]hell
+.vscode

@@ -260,6 +260,25 @@
       "groupName": "security",
       "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP/CM instance by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
       "visibleRule": "limitAccesToRep = true || limitAccesToCm = true"
+    },
+    {
+      "name": "limitAccessToKudu",
+      "type": "boolean",
+      "label": "Limit access to Kudu of web apps in resource group by IP",
+      "defaultValue": "false",
+      "required": false,
+      "groupName": "security",
+      "helpMarkDown": "Allows to limit access to Kudu of all web apps in resource group by setting IP whitelist."
+    },
+    {
+      "name": "kuduIpMaskCollection",
+      "type": "string",
+      "label": "Kudu IP/Mask comma-separated collection",
+      "defaultValue": "",
+      "required": false,
+      "groupName": "security",
+      "helpMarkDown": "Here you can define additional IPs, which are allowed access to Kudu of each web app in resource group by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255'). You do not need to specify external IP of your agent, as it will be retrieved during limiting access.",
+      "visibleRule": "limitAccessToKudu = true"
     }
   ],
   "instanceNameFormat": "Deploy Sitecore",

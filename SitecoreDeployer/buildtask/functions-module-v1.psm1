@@ -157,26 +157,35 @@ function CheckIfPossiblyUriAndIfNeedToGenerateSas {
     }
 }
 
+function RetrieveAllWebApps {
+    param (
+        [string]$rgName,
+        [string]$resType = "Microsoft.Web/sites"
+    )
+    
+    #Get all resources, which are in resource groups, which contains our name
+    $resources = Get-AzureRmResource -ODataQuery "`$filter=resourcegroup eq '$rgName'";
+    $resourcesAmount = ($resources | Measure-Object).Count;
+    if ($resourcesAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] RetrieveAllWebApps: Could not retrieve any resources in given resource group";
+        return;
+    }
+    return $resources.where( {$_.ResourceType -eq $resType -And $_.ResourceGroupName -eq "$rgName"});
+}
+
 function CollectOutBoundIpAddresses {
     param ($resourceGroupName)
 
     $collectedIps = "";
-    #Get all resources, which are in resource groups, which contains our name
-    $resources = Get-AzureRmResource -ODataQuery "`$filter=resourcegroup eq '$resourceGroupName'"
-    $resourcesAmount = ($resources | Measure-Object).Count
-    if ($resourcesAmount -le 0) {
-        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any resources in given resource group"
-        return $collectedIps;
-    }
-    $webApps = $resources.where( {$_.ResourceType -eq "Microsoft.Web/sites" -And $_.ResourceGroupName -eq "$ResourceGroupName"})
-    $webAppsAmount = ($webApps | Measure-Object).Count
+    $webApps = RetrieveAllWebApps -rgName $resourceGroupName;
+    $webAppsAmount = ($webApps | Measure-Object).Count;
     if ($webAppsAmount -le 0) {
-        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any web apps in given resource group"
+        Write-Host "##vso[task.logissue type=warning;] CollectOutBoundIpAddresses: Could not retrieve any web apps in given resource group";
         return $collectedIps;
     }
 
     foreach ($webApp in $webApps) {
-        $collectedIps += CollectWebAppOutboundIpAddresses -resourceGroupName $ResourceGroupName -webAppName $webApp.Name -resourcePresenceChecked $true
+        $collectedIps += CollectWebAppOutboundIpAddresses -resourceGroupName $ResourceGroupName -webAppName $webApp.Name -resourcePresenceChecked $true;
     }
     return $collectedIps.TrimEnd(',');
 }
@@ -213,6 +222,7 @@ function CollectWebAppOutboundIpAddresses{
 }
 
 function GetWebAppApiVersion {
+    #get API version to work with Azure Web apps
     #$apiV = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
     #in latest APIVerions (2018-02-01) - there was changes, described here https://github.com/akuryan/vsts.extensions/issues/23
     $apiV = "2016-08-01";
@@ -239,7 +249,7 @@ function SplitIpStringToHashTable {
             Write-Verbose $ipHash;
             $returnHashtable += $ipHash;
         } else {
-            Write-Host "Same IP $ipAddr detected in collection $ipCollectionString";
+            Write-Host "Same IP $ipAddr detected in collection $ipCollectionString and it is not added";
         }
     }
     return $returnHashtable;
@@ -269,9 +279,6 @@ function SetWebAppRestrictions {
         $restrictionsHashtable += SplitIpStringToHashTable -ipCollectionString $ipList;
     }
 
-    #get API version to work with Azure Web apps
-    #$APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
-    #in latest APIVerions (2018-02-01) - there was changes, described here https://github.com/akuryan/vsts.extensions/issues/23
     $APIVersion = GetWebAppApiVersion;
     #by default, we are supposing we are working with slots
     $isSlot = $false;
@@ -458,4 +465,60 @@ function GetParametersFromParameterFile {
     }
 
     return $parameters;
+}
+
+function SetKuduIpRestrictions {
+    param (
+        [string]$rgName,
+        [string]$ipListSpecified
+    )
+
+    $APIVersion = GetWebAppApiVersion;
+    $webApps = RetrieveAllWebApps -rgName $resourceGroupName;
+    $processWebApps = $true;
+    $webAppSlots = RetrieveAllWebApps -rgName $resourceGroupName -resType "Microsoft.Web/sites/slots";
+    $processWebAppSlots = $true;
+
+    #add current IP to list specified
+    $clientIp = Invoke-WebRequest 'https://api.ipify.org' | Select-Object -ExpandProperty Content;
+    $ipList = $ipListSpecified + "," + $clientIp + "/255.255.255.255";
+
+    $restrictionsHashtable = @();
+    Write-Verbose "Only following IPs will have access to KUDU of each web app: $ipList";
+    $restrictionsHashtable += SplitIpStringToHashTable -ipCollectionString $ipList;
+
+
+    $webAppsAmount = ($webApps | Measure-Object).Count;
+    if ($webAppsAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] SetKuduIpRestrictions: Could not retrieve any web apps in given resource group $rgName";
+        $processWebApps = $false;
+    }
+
+    $webAppSlotsAmount = ($webAppSlots | Measure-Object).Count;
+    if ($webAppSlotsAmount -le 0) {
+        Write-Host "##vso[task.logissue type=warning;] SetKuduIpRestrictions: Could not retrieve any web app slots in given resource group $rgName";
+        $processWebAppSlots = $false;
+    }
+
+    if ($processWebApps) {
+        foreach($webApp in $webApps) {
+            $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/config -ResourceName $webApp.Name -ResourceGroupName $rgName -ApiVersion $APIVersion);
+            Write-Verbose "Web app configuration received:";
+            Write-Verbose $WebAppConfig;
+        
+            $WebAppConfig.Properties.scmIpSecurityRestrictions = $restrictionsHashtable;
+            $WebAppConfig | Set-AzureRmResource -ApiVersion $APIVersion -Force | Out-Null;
+        }
+    }
+
+    if ($processWebAppSlots) {
+        foreach($webAppSlot in $webAppSlots) {
+            $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites/slots/config -ResourceName $webAppSlot.Name -ResourceGroupName $rgName -ApiVersion $APIVersion);
+            Write-Verbose "Web app configuration received:";
+            Write-Verbose $WebAppConfig;
+        
+            $WebAppConfig.Properties.scmIpSecurityRestrictions = $restrictionsHashtable;
+            $WebAppConfig | Set-AzureRmResource -ApiVersion $APIVersion -Force | Out-Null;
+        }
+    }
 }

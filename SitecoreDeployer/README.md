@@ -85,4 +85,4 @@ I shall note, that inputs are not validated strictly, so - it will try to write 
 
 ```Limit access to Kudu of web apps in resource group by IP``` - if selected, Kudu (scm site) access will be limited by IP set in `Kudu IP/Mask comma-separated collection`
 
-```Kudu IP/Mask comma-separated collection``` - Here you can define additional IPs, which are allowed access to Kudu of each web app in resource group by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255'). You do not need to specify external IP of your agent, as it will be retrieved during limiting access.
+```Kudu IP/Mask comma-separated collection``` - Here you can define additional IPs, which are allowed access to Kudu of each web app in resource group by defining comma-separated list of IP/Mask (e.g. `1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255`). You do not need to specify external IP of your agent, as it will be retrieved during limiting access.

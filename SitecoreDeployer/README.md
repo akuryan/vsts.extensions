@@ -81,4 +81,8 @@ I shall note, that inputs are not validated strictly, so - it will try to write 
 
 ```Limit access to CM role by IP``` - if selected (false by default) will allow all outgoing IPs of all web apps in current resource group to access CM instance. Also, will take input from ```IP/Mask comma-separated collection``` as well. Could be combined with ```<ipSecurity>``` section in your web.config - just do not forget to omit ```<clear />``` directive, then
 
-```IP/Mask comma-separated collection``` - comma-separated collection of IP/Mask pairs to be set for REP instance access allow list.
+```IP/Mask comma-separated collection``` - comma-separated collection of IP/Mask pairs to be set for instances access allow list (example: `1.1.1.1\255.255.255.255`).
+
+```Limit access to Kudu of web apps in resource group by IP``` - if selected, Kudu (scm site) access will be limited by IP set in `Kudu IP/Mask comma-separated collection`
+
+```Kudu IP/Mask comma-separated collection``` - Here you can define additional IPs, which are allowed access to Kudu of each web app in resource group by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255'). You do not need to specify external IP of your agent, as it will be retrieved during limiting access.

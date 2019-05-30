@@ -298,16 +298,5 @@ if ($DeploymentType -ne "validate") {
     LimitAccessToInstance -rgName $RgName -instanceName $instanceNameRep -instanceRole "rep" -limitAccessToInstanceAsString $limitRepAccessInput -ipMaskCollectionUserInput $ipList;
     LimitAccessToInstance -rgName $RgName -instanceName $instanceNameCm -instanceRole "cm" -limitAccessToInstanceAsString $limitCmAccessInput -ipMaskCollectionUserInput $ipList;
     LimitAccessToInstance -rgName $RgName -instanceName $instanceNamePrc -instanceRole "prc" -limitAccessToInstanceAsString $limitPrcAccessInput -ipMaskCollectionUserInput $ipList;
-
-    #Access to Kudu
-    $limitKuduAccessInput = Get-VstsInput -Name limitAccessToKudu;
-    $LimitKuduAccess = [System.Convert]::ToBoolean($limitKuduAccessInput);
-    
-    if ($LimitKuduAccess) {
-        #Access to Kudu IP/Mask list
-        $kuduIpList = Get-VstsInput -Name kuduIpMaskCollection;
-        SetKuduIpRestrictions -rgName $RgName -ipListSpecified $kuduIpList;
-    }
-
 }
 Write-Host "Deployment Complete.";

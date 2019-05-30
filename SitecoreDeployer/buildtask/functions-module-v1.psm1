@@ -474,9 +474,9 @@ function SetKuduIpRestrictions {
     )
 
     $APIVersion = GetWebAppApiVersion;
-    $webApps = RetrieveAllWebApps -rgName $resourceGroupName;
+    $webApps = RetrieveAllWebApps -rgName $rgName;
     $processWebApps = $true;
-    $webAppSlots = RetrieveAllWebApps -rgName $resourceGroupName -resType "Microsoft.Web/sites/slots";
+    $webAppSlots = RetrieveAllWebApps -rgName $rgName -resType "Microsoft.Web/sites/slots";
     $processWebAppSlots = $true;
 
     #add current IP to list specified

@@ -242,6 +242,33 @@ function SplitIpStringToHashTable {
     foreach ($inputIpMask in $ipCollectionString.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
         $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim();
         $mask = ($inputIpMask.Split('/'))[1].ToString().Trim();
+
+        #convert mask to CIDR
+        if ($mask.Length -gt 2) {
+            #this is regular network mask and it must be converted;
+            $result = 0;
+            try {
+                #ensure that we have valid IP address in our mask specified
+                [IPAddress]$ip = $mask;
+                $octets = $ip.IPAddressToString.Split('.');
+                foreach($octet in $octets)
+                {
+                  while(0 -ne $octet) 
+                  {
+                    $octet = ($octet -shl 1) -band [byte]::MaxValue;
+                    $result++; 
+                  }
+                }
+                [string]$mask = $result;
+            }
+            catch {
+                Write-Host "##vso[task.logissue type=warning;] Could not transform mask $mask from $inputIpMask to CIDR";
+                continue;
+            }
+        } 
+        #form CIDR notation
+        $ipAddr = $ipAddr + "/" + $mask;
+
         if (-not ($ipAddr -in $returnHashtable.ipAddress)) {
             $ipHash = [PSCustomObject]@{ipAddress = $ipAddr; action = "Allow"; priority = $counter; name = "Allow $ipAddr"; description = "Added by Sitecore Deployer"};
             Write-Verbose "Adding following IP to restrictions: $ipAddr";

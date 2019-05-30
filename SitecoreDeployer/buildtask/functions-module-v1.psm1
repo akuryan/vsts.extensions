@@ -214,7 +214,7 @@ function CollectWebAppOutboundIpAddresses{
 
 function SetWebAppRestrictions {
     param (
-        $userInputIpList,
+        $ipList,
         $webAppInstanceName,
         $resourceGroupName
     )
@@ -227,13 +227,13 @@ function SetWebAppRestrictions {
     Write-Verbose $webIP
     $restrictionsHashtable += $webIP
 
-    if ([string]::IsNullOrWhiteSpace($userInputIpList)) {
+    if ([string]::IsNullOrWhiteSpace($ipList)) {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined by user"
     }
     else {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Defining IP list (defined by user + collected outbound IP for $webAppInstanceName instance)"
         #split on comma
-        foreach ($inputIpMask in $userInputIpList.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
+        foreach ($inputIpMask in $ipList.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
             $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim()
             $mask = ($inputIpMask.Split('/'))[1].ToString().Trim()
             if (-not ($ipAddr -in $restrictionsHashtable.ipAddress)) {
@@ -347,7 +347,7 @@ function LimitAccessToInstance {
 
     Write-Verbose "We are going to write this IP restrictions to $instanceRole web app: $ipMaskCollectionUserInput"
 
-    SetWebAppRestrictions -userInputIpList $ipMaskCollectionUserInput -webAppInstanceName $instanceName -resourceGroupName $rgName
+    SetWebAppRestrictions -ipList $ipMaskCollectionUserInput -webAppInstanceName $instanceName -resourceGroupName $rgName
 }
 
 function ListArmParameters {

@@ -224,8 +224,7 @@ function CollectWebAppOutboundIpAddresses{
 function GetWebAppApiVersion {
     #get API version to work with Azure Web apps
     #$apiV = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
-    #in latest APIVerions (2018-02-01) - there was changes, described here https://github.com/akuryan/vsts.extensions/issues/23
-    $apiV = "2016-08-01";
+    $apiV = "2018-02-01";
     Write-Verbose "API version for web apps is $apiV";
     return $apiV;
 }
@@ -237,17 +236,18 @@ function SplitIpStringToHashTable {
 
     $returnHashtable = @();
 
+    $counter = 100;
+
     #split on comma
     foreach ($inputIpMask in $ipCollectionString.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
         $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim();
         $mask = ($inputIpMask.Split('/'))[1].ToString().Trim();
         if (-not ($ipAddr -in $returnHashtable.ipAddress)) {
-            $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''};
-            $ipHash.ipAddress = $ipAddr;
-            $ipHash.subnetMask = $mask;
-            Write-Verbose "Adding following IP to restrictions:";
+            $ipHash = [PSCustomObject]@{ipAddress = $ipAddr; action = "Allow"; priority = $counter; name = "Allow $ipAddr"; description = "Added by Sitecore Deployer"};
+            Write-Verbose "Adding following IP to restrictions: $ipAddr";
             Write-Verbose $ipHash;
             $returnHashtable += $ipHash;
+            $counter++;
         } else {
             Write-Host "Same IP $ipAddr detected in collection $ipCollectionString and it is not added";
         }
@@ -263,19 +263,13 @@ function SetWebAppRestrictions {
     )
     $restrictionsHashtable = @();
     #localhost shall be allowed by default :)
-    $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''};
-    $webIP.ipAddress = '127.0.0.1';
-    $webIP.subnetMask = '255.255.255.255';
-    Write-Verbose "Adding following IP to restrictions:";
-    Write-Verbose $webIP;
-    $restrictionsHashtable += $webIP;
+    $ipList = $ipList + ",127.0.0.1/255.255.255.255,127.0.0.2/255.255.255.255";
 
     if ([string]::IsNullOrWhiteSpace($ipList)) {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined";
     }
     else {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Defining IP list (defined by user + collected outbound IP for $webAppInstanceName instance)";
-
         $restrictionsHashtable += SplitIpStringToHashTable -ipCollectionString $ipList;
     }
 

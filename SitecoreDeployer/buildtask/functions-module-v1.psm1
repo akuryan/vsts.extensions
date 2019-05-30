@@ -215,7 +215,7 @@ function CollectWebAppOutboundIpAddresses{
 
     $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webAppName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
     foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
-        $valueToAdd = $ip + "/255.255.255.255,";
+        $valueToAdd = $ip + "/32,";
         $webAppOutboundIPs += $valueToAdd;
     }
     return $webAppOutboundIPs;
@@ -290,7 +290,7 @@ function SetWebAppRestrictions {
     )
     $restrictionsHashtable = @();
     #localhost shall be allowed by default :)
-    $ipList = $ipList + ",127.0.0.1/255.255.255.255,127.0.0.2/255.255.255.255";
+    $ipList = $ipList + ",127.0.0.1/32,127.0.0.2/32";
 
     if ([string]::IsNullOrWhiteSpace($ipList)) {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined";
@@ -502,7 +502,7 @@ function SetKuduIpRestrictions {
 
     #add current IP to list specified
     $clientIp = Invoke-WebRequest 'https://api.ipify.org' | Select-Object -ExpandProperty Content;
-    $ipList = $ipListSpecified + "," + $clientIp + "/255.255.255.255";
+    $ipList = $ipListSpecified + "," + $clientIp + "/32";
 
     $restrictionsHashtable = @();
     Write-Verbose "Only following IPs will have access to KUDU of each web app: $ipList";

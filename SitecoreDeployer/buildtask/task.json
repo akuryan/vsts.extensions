@@ -258,7 +258,7 @@
       "defaultValue": "",
       "required": false,
       "groupName": "security",
-      "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP/CM instance by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255') for testing and monitoring purposes.",
+      "helpMarkDown": "Here you can define additional IPs, which are allowed access to REP/CM instance by defining comma-separated list of IP's in CIDR notation (e.g. '1.1.1.1/32,192.168.0.1/32,1.1.1.1/32') for testing and monitoring purposes.",
       "visibleRule": "limitAccesToRep = true || limitAccesToCm = true"
     },
     {
@@ -277,7 +277,7 @@
       "defaultValue": "",
       "required": false,
       "groupName": "security",
-      "helpMarkDown": "Here you can define additional IPs, which are allowed access to Kudu of each web app in resource group by defining comma-separated list of IP/Mask (e.g. '1.1.1.1/255.255.255.255,192.168.0.1/255.255.255.255'). You do not need to specify external IP of your agent, as it will be retrieved during limiting access.",
+      "helpMarkDown": "Here you can define additional IPs, which are allowed access to Kudu of each web app in resource group by defining comma-separated list of IP's in CIDR notation (e.g. '1.1.1.1/32,192.168.0.1/32,1.1.1.1/32'). You do not need to specify external IP of your agent, as it will be retrieved during limiting access.",
       "visibleRule": "limitAccessToKudu = true"
     }
   ],

@@ -239,8 +239,13 @@ function SplitIpStringToHashTable {
 
     #split on comma
     foreach ($inputIpMask in $ipCollectionString.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
-        $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim();
-        $mask = ($inputIpMask.Split('/'))[1].ToString().Trim();
+        if ($inputIpMask.Contains('/')) {
+            $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim();
+            $mask = ($inputIpMask.Split('/'))[1].ToString().Trim();
+        } else {
+            $ipAddr = $inputIpMask;
+            $mask = "32";
+        }
 
         #convert mask to CIDR
         if ($mask.Length -gt 2) {
@@ -264,7 +269,8 @@ function SplitIpStringToHashTable {
                 Write-Host "##vso[task.logissue type=warning;] Could not transform mask $mask from $inputIpMask to CIDR";
                 continue;
             }
-        } 
+        }
+
         #form CIDR notation
         $ipAddr = $ipAddr + "/" + $mask;
 

@@ -215,7 +215,7 @@ function CollectWebAppOutboundIpAddresses{
 
     $WebAppConfig = (Get-AzureRmResource -ResourceType Microsoft.Web/sites -ResourceName $webAppName -ResourceGroupName $resourceGroupName -ApiVersion $APIVersion)
     foreach ($ip in $WebAppConfig.Properties.outboundIpAddresses.Split(',')) {
-        $valueToAdd = $ip + "/255.255.255.255,";
+        $valueToAdd = $ip + "/32,";
         $webAppOutboundIPs += $valueToAdd;
     }
     return $webAppOutboundIPs;
@@ -224,8 +224,7 @@ function CollectWebAppOutboundIpAddresses{
 function GetWebAppApiVersion {
     #get API version to work with Azure Web apps
     #$apiV = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
-    #in latest APIVerions (2018-02-01) - there was changes, described here https://github.com/akuryan/vsts.extensions/issues/23
-    $apiV = "2016-08-01";
+    $apiV = "2018-02-01";
     Write-Verbose "API version for web apps is $apiV";
     return $apiV;
 }
@@ -237,17 +236,45 @@ function SplitIpStringToHashTable {
 
     $returnHashtable = @();
 
+    $counter = 100;
+
     #split on comma
     foreach ($inputIpMask in $ipCollectionString.Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)) {
         $ipAddr = ($inputIpMask.Split('/'))[0].ToString().Trim();
         $mask = ($inputIpMask.Split('/'))[1].ToString().Trim();
+
+        #convert mask to CIDR
+        if ($mask.Length -gt 2) {
+            #this is regular network mask and it must be converted;
+            $result = 0;
+            try {
+                #ensure that we have valid IP address in our mask specified
+                [IPAddress]$ip = $mask;
+                $octets = $ip.IPAddressToString.Split('.');
+                foreach($octet in $octets)
+                {
+                  while(0 -ne $octet) 
+                  {
+                    $octet = ($octet -shl 1) -band [byte]::MaxValue;
+                    $result++; 
+                  }
+                }
+                [string]$mask = $result;
+            }
+            catch {
+                Write-Host "##vso[task.logissue type=warning;] Could not transform mask $mask from $inputIpMask to CIDR";
+                continue;
+            }
+        } 
+        #form CIDR notation
+        $ipAddr = $ipAddr + "/" + $mask;
+
         if (-not ($ipAddr -in $returnHashtable.ipAddress)) {
-            $ipHash = [PSCustomObject]@{ipAddress=''; subnetMask = ''};
-            $ipHash.ipAddress = $ipAddr;
-            $ipHash.subnetMask = $mask;
-            Write-Verbose "Adding following IP to restrictions:";
+            $ipHash = [PSCustomObject]@{ipAddress = $ipAddr; action = "Allow"; priority = $counter; name = "Allow $ipAddr"; description = "Added by Sitecore Deployer"};
+            Write-Verbose "Adding following IP to restrictions: $ipAddr";
             Write-Verbose $ipHash;
             $returnHashtable += $ipHash;
+            $counter++;
         } else {
             Write-Host "Same IP $ipAddr detected in collection $ipCollectionString and it is not added";
         }
@@ -263,19 +290,13 @@ function SetWebAppRestrictions {
     )
     $restrictionsHashtable = @();
     #localhost shall be allowed by default :)
-    $webIP = [PSCustomObject]@{ipAddress = ''; subnetMask = ''};
-    $webIP.ipAddress = '127.0.0.1';
-    $webIP.subnetMask = '255.255.255.255';
-    Write-Verbose "Adding following IP to restrictions:";
-    Write-Verbose $webIP;
-    $restrictionsHashtable += $webIP;
+    $ipList = $ipList + ",127.0.0.1/32,127.0.0.2/32";
 
     if ([string]::IsNullOrWhiteSpace($ipList)) {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: IP List is not defined";
     }
     else {
         Write-Host "##vso[task.logissue type=warning;] SetWebAppRestrictions: Defining IP list (defined by user + collected outbound IP for $webAppInstanceName instance)";
-
         $restrictionsHashtable += SplitIpStringToHashTable -ipCollectionString $ipList;
     }
 
@@ -481,7 +502,7 @@ function SetKuduIpRestrictions {
 
     #add current IP to list specified
     $clientIp = Invoke-WebRequest 'https://api.ipify.org' | Select-Object -ExpandProperty Content;
-    $ipList = $ipListSpecified + "," + $clientIp + "/255.255.255.255";
+    $ipList = $ipListSpecified + "," + $clientIp + "/32";
 
     $restrictionsHashtable = @();
     Write-Verbose "Only following IPs will have access to KUDU of each web app: $ipList";

@@ -199,9 +199,8 @@ function CollectWebAppOutboundIpAddresses{
         $resourcePresenceChecked = $false
         )
 
-    $webAppOutboundIPs = ""
-    #$APIVersion = ((Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Web).ResourceTypes | Where-Object ResourceTypeName -eq sites).ApiVersions[0];
-    $APIVersion = "2018-02-01"
+    $webAppOutboundIPs = "";
+    $APIVersion = GetWebAppApiVersion;
 
     if (!$resourcePresenceChecked) {
         #get all resrouces in current resource group, and check if resource is present there
